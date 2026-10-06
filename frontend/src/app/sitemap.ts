@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { catalog, collections } from "@/api/server";
-import { INFO_PAGES, paths } from "@/config/routes";
+import { INFO_PAGES } from "@nivora/shared/config/infoPages";
+import { paths } from "@/config/routes";
 import { absoluteUrl } from "@/features/seo/metadata";
 
 /** All public, indexable pages (arch §10.3). Private pages and search are excluded. */

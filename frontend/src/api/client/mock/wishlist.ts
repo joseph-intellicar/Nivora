@@ -1,7 +1,7 @@
-import { addLine, checkQuantity, quantityInCart } from "@/domain/cart";
-import { toProductSummary } from "@/domain/catalog";
-import type { WishlistApi } from "../../contracts";
-import { ApiError } from "../../errors";
+import { addLine, checkQuantity, quantityInCart } from "@nivora/shared/domain/cart";
+import { toProductSummary } from "@nivora/shared/domain/catalog";
+import type { WishlistApi } from "@nivora/shared/contracts";
+import { ApiError } from "@nivora/shared/errors";
 import { readLines, writeLines } from "./cartStore";
 import { loadCatalog } from "./catalogData";
 import { available, readAdjustments } from "./inventory";

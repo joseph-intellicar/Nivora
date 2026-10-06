@@ -1,4 +1,4 @@
-import type { DeliveryOption } from "@/domain/types";
+import type { DeliveryOption } from "@nivora/shared/domain/types";
 
 /**
  * TanStack Query keys for browser-side data (arch §11.1). User-scoped keys include the user id

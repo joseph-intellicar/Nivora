@@ -1,6 +1,6 @@
 import { siteConfig } from "@/config/site";
 import { paths } from "@/config/routes";
-import type { Product, ProductSummary } from "@/domain/types";
+import type { Product, ProductSummary } from "@nivora/shared/domain/types";
 import { absoluteUrl } from "./metadata";
 
 /** schema.org builders (arch §10.2). */

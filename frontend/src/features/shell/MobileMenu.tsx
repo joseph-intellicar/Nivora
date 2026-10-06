@@ -15,7 +15,7 @@ import {
 import { Drawer } from "@/components/ui/Drawer";
 import { IconButton } from "@/components/ui/IconButton";
 import { paths } from "@/config/routes";
-import type { Category } from "@/domain/types";
+import type { Category } from "@nivora/shared/domain/types";
 import { useLogout } from "@/features/auth/hooks/useAuthMutations";
 import { useSession } from "@/features/auth/hooks/useSession";
 import { cn } from "@/lib/cn";

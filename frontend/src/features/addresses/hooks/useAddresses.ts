@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, queryKeys } from "@/api/client";
-import type { AddressInput } from "@/domain/types";
+import type { AddressInput } from "@nivora/shared/domain/types";
 import { useSession } from "@/features/auth/hooks/useSession";
 
 /** Saved addresses, default first (requirements §21). */

@@ -1,8 +1,8 @@
-import { mergeCarts } from "@/domain/cart";
-import { loginSchema, signupSchema } from "@/domain/validation";
+import { mergeCarts } from "@nivora/shared/domain/cart";
+import { loginSchema, signupSchema } from "@nivora/shared/domain/validation";
 import { createId } from "@/lib/ids";
-import type { AuthApi, AuthResult } from "../../contracts";
-import { ApiError } from "../../errors";
+import type { AuthApi, AuthResult } from "@nivora/shared/contracts";
+import { ApiError } from "@nivora/shared/errors";
 import { readLines, writeLines } from "./cartStore";
 import { loadCatalog } from "./catalogData";
 import { available, readAdjustments } from "./inventory";
@@ -10,7 +10,7 @@ import { request } from "./latency";
 import type { CheckoutSessionRecord, StoredUser } from "./records";
 import { currentUser, endSession, readUsers, startSession, toPublicUser } from "./session";
 import { isRecord, KEYS, read, write } from "./storage";
-import { validate } from "./validate";
+import { validate } from "@nivora/shared/validate";
 
 /** Folds the guest cart into the user's saved cart and empties the guest cart (req §17.5). */
 async function mergeGuestCart(userId: string): Promise<boolean> {

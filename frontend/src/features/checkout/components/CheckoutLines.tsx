@@ -1,7 +1,7 @@
 import { ProductImage } from "@/components/ui/ProductImage";
-import { formatOptions } from "@/domain/catalog";
-import type { ResolvedLine } from "@/domain/types";
-import { formatPrice } from "@/lib/format";
+import { formatOptions } from "@nivora/shared/domain/catalog";
+import type { ResolvedLine } from "@nivora/shared/domain/types";
+import { formatPrice } from "@nivora/shared/lib/format";
 
 /** Read-only item list for checkout (quantities are changed in the cart, req §20). */
 export function CheckoutLines({ lines }: { lines: ResolvedLine[] }) {

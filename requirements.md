@@ -1015,7 +1015,7 @@ Phase 1 is complete when all of the following work, as one connected application
 
 ## 36. Phase 2 considerations
 
-Phase 2 will add a real backend in `backend/` (technology to be decided at the architecture stage), moving from:
+Phase 2 will add a real backend in `backend/`, moving from:
 
 ```
 Mock data + localStorage   →   Frontend → Backend API → Database
@@ -1031,3 +1031,5 @@ Phase 1 decisions that keep this path open:
 - Order records that snapshot item and address data (§24.2).
 - The guest cart + merge-on-login behavior (§17.5) maps naturally to a server-side cart.
 - None of this is implemented in Phase 1.
+
+**Phase 2 stack (decided 2026-10-06):** NestJS + TypeScript, Prisma ORM, Neon PostgreSQL. Design: [`docs/backend-architecture.md`](docs/backend-architecture.md).

@@ -2,16 +2,7 @@
  * Path builders (docs/architecture.md §9.1). Components never hand-write paths.
  */
 
-export const INFO_PAGES = [
-  { slug: "about", title: "About Nivora" },
-  { slug: "contact", title: "Contact" },
-  { slug: "help", title: "Help" },
-  { slug: "returns", title: "Returns" },
-  { slug: "privacy", title: "Privacy" },
-  { slug: "terms", title: "Terms" },
-] as const;
-
-export type InfoPageSlug = (typeof INFO_PAGES)[number]["slug"];
+import type { InfoPageSlug } from "@nivora/shared/config/infoPages";
 
 /** Only internal paths are allowed as post-login destinations (no open redirects). */
 export function isSafeInternalPath(value: string | null | undefined): value is string {

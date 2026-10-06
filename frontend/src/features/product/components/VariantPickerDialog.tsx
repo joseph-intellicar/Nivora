@@ -9,10 +9,10 @@ import { Dialog } from "@/components/ui/Dialog";
 import { Price } from "@/components/ui/Price";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { paths } from "@/config/routes";
-import type { StockAdjustments } from "@/domain/types";
+import type { StockAdjustments } from "@nivora/shared/domain/types";
 import { useSession } from "@/features/auth/hooks/useSession";
 import { useAddToCart } from "@/features/cart/hooks/useCart";
-import { getErrorMessage } from "@/lib/errorMessages";
+import { getErrorMessage } from "@nivora/shared/errorMessages";
 import { toast } from "@/stores/toastStore";
 import { useVariantPickerStore } from "@/stores/variantPickerStore";
 import {
@@ -22,7 +22,7 @@ import {
   selectedVariant,
   stockFor,
   type Selection,
-} from "../variantSelection";
+} from "@nivora/shared/domain/variantSelection";
 import { StockStatus } from "./StockStatus";
 import { VariantSelector } from "./VariantSelector";
 

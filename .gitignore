@@ -23,3 +23,8 @@ pnpm-debug.log*
 .idea/
 .DS_Store
 Thumbs.db
+
+# Monorepo build outputs
+packages/*/dist/
+backend/dist/
+backend/src/generated/

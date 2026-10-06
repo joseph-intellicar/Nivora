@@ -865,3 +865,319 @@ Joseph shared two screenshots: a reference product page from a large fashion sto
   - the variant-logic tests;
   - lint, typecheck and format.
 - **Bug found during regression:** two orders placed in the same millisecond could be listed in either order. The orders list now breaks ties by order number (newest first). The journey suite passed 5 runs in a row afterwards.
+
+---
+
+## Session 1 (continued): Phase 2 — Backend architecture
+
+Joseph proposed the backend stack **NestJS + TypeScript, Prisma ORM, Neon PostgreSQL**, shared the Neon connection URL, and asked for a backend architecture document plus updates to the plan.
+
+### Checks
+
+- **Versions:** NestJS 12 (needs Node ≥ 20) and Prisma 7.10. npm's `latest` tag for Prisma points to an 8.0 release candidate, so **7.x is pinned**. The project's Node 22 satisfies both.
+- **Prisma 7 changes,** read from Prisma's upgrade guide:
+  - a mandatory driver adapter (`@prisma/adapter-pg`);
+  - `prisma.config.ts` holds the datasource URL;
+  - generator `prisma-client` with a required output path;
+  - `.env` is not loaded automatically;
+  - the defaults lean to ESM. NestJS builds as CommonJS, so this is to be settled during scaffolding.
+- **Neon:** a read-only `psql` test reached both the pooled and the direct endpoints. The database runs PostgreSQL 18.6, is empty, and is in AWS us-east-2.
+- **Credentials:** saved **only** in `backend/.env` (permissions 600, ignored by the root `.gitignore`, confirmed with `git check-ignore`), plus a password-free `backend/.env.example`. No document contains the password. Rotating it before any public deployment is recommended, because it was shared in chat.
+
+### Decisions (Joseph)
+
+| Question | Decision |
+|---|---|
+| Stack | NestJS + TypeScript, Prisma, Neon PostgreSQL |
+| How the frontend and backend share the business rules, schemas and catalogue data | **npm workspaces + `packages/shared` (`@nivora/shared`)** |
+| Sessions | **Database sessions in an HTTP-only cookie** (only a hash of the token is stored) |
+| Guest cart | **Server-side, anonymous `nivora_cart` cookie**, merged on login |
+| Backend tests | **Jest** (+ Supertest), against a Neon test branch |
+
+### Work done
+
+- **Created `docs/backend-architecture.md` (21 sections):**
+  - stack fit and versions;
+  - the extra libraries proposed for approval (argon2, cookie-parser, helmet, @nestjs/throttler, @nestjs/config/dotenv, supertest, tsx);
+  - the workspaces layout;
+  - layers (controller → service → Prisma, with shared domain rules);
+  - 11 modules mapped to the frontend contracts;
+  - a full Prisma data model, with a stock CHECK constraint, an order-number sequence and an idempotency key;
+  - the REST API (`/api/v1`) mapped endpoint by endpoint to the contracts, with the error envelope and status codes;
+  - sessions, server-side guest carts and the merge;
+  - catalog querying (shared pipeline in memory plus live stock from the database, with a path to SQL and full-text search);
+  - transactional order placement with conditional stock decrements, idempotency and cancel-with-restore;
+  - security (same-origin via Next rewrites, SameSite plus Origin checks, rate limits);
+  - Prisma 7 and Neon specifics, environment variables, seeding, frontend switch-over, testing, operations;
+  - milestones B1–B9 and open items.
+- **Updated:**
+  - `requirements.md` §36 (stack decided);
+  - `docs/architecture.md` §21 (Phase 2 refinements);
+  - `README.md`, `docs/README.md` and `backend/README.md` (stack and environment).
+
+### Open items
+
+- Approve the extra libraries.
+- Create a Neon test branch for Jest.
+- Rotate the database password before going public.
+- Consider a Neon region in Asia for Indian customers.
+- Choose hosting.
+
+### Next step
+
+Joseph to review the backend architecture. Then write a detailed backend task list (like `tasks.md`) and start with B1, the shared package.
+
+---
+
+## Session 1 (continued): Phase 2 task list (`tasks-phase2.md`)
+
+Joseph re-shared the Neon connection URL and asked for the tasks to build the backend API and integrate it with the frontend.
+
+- **Connection URL:** it was identical to the one already stored in `backend/.env`, so nothing new was saved. It still appears in no document.
+- **Created `tasks-phase2.md`:** **39 tasks (P2-001 to P2-039) in 10 stages**, matching barch milestones B1–B9. It uses the Phase 1 format (goal, dependencies, requirement links, implementation notes, acceptance criteria, 🤖/👤 verification, verification log) and the same one-task-at-a-time workflow.
+  - **P0:** approvals (the extra libraries) and a Neon test branch.
+  - **P1:** npm workspaces and `@nivora/shared`. The domain rules, validation, constants, listing-params parser, contracts and catalogue data move there, with Jest tests for the rules and a full frontend regression.
+  - **P2:** NestJS scaffold, configuration and security wiring, the error envelope, Prisma 7 on Neon, and the health endpoint.
+  - **P3:** schema and migration with CHECK constraints and the order sequence, an idempotent seed, and a Jest/Supertest harness that refuses to run against the main database.
+  - **P4:** catalogue and content endpoints, with parity tests against the Phase 1 pipeline.
+  - **P5:** sessions, auth with rate limits, profile.
+  - **P6:** server-side carts with the guest cookie, merge on login, wishlist.
+  - **P7:** addresses, checkout sessions, transactional and idempotent Place Order, cancel with stock restore, and concurrency tests (e.g. 10 parallel orders for 3 units → exactly 3 succeed).
+  - **P8:** frontend HTTP adapters, same-origin rewrites, removal of the inventory overlay, `proxy.ts` route protection, and a full regression in `http` mode.
+  - **P9:** security review, cleanup jobs, performance on Neon, runbook docs, scope check and sign-off.
+- **Clarification added:** the listing URL parser (`listingParams`) also moves to the shared package, because `GET /products` must parse exactly the same parameters as the frontend.
+- **Links:** added from `README.md`, `tasks.md` (Phase 1 marked complete) and `docs/backend-architecture.md`.
+
+### Next step
+
+P2-001 needs Joseph to **approve the extra libraries** and **create a Neon test branch** and share its URL. Then P2-002 (workspaces) begins when Joseph says to proceed.
+
+---
+
+## Session 1 (continued): P2-001 — Approvals and test database
+
+- **Joseph approved all the extra libraries:** argon2, cookie-parser, helmet, @nestjs/throttler, @nestjs/config + dotenv, supertest, tsx.
+- **Joseph chose not to create a separate Neon branch.** Tests should use the main branch.
+  - **Safeguard:** tests run in their own PostgreSQL schema, `nivora_test`, inside the same main database. Real data stays in `public`. The test harness will refuse to run unless it is connected to `nivora_test` (P2-014).
+- **Verified:**
+  - the pooled and direct URLs both reach PostgreSQL 18.6;
+  - the database user can create schemas and tables (tested in a rolled-back transaction, so only `public` exists afterwards).
+- **Created `backend/.env.test`:** the same URLs plus `schema=nivora_test`, permissions 600, git-ignored (checked). Connection strings exist only in `backend/.env` and `backend/.env.test`.
+- **Updated:** `docs/backend-architecture.md` (§2.2 approved, §14 test isolation, §18 testing, §21 open items) and `tasks-phase2.md`. **P2-001 is done (1 / 39).**
+
+### Next step
+
+P2-002 (root npm workspaces) when Joseph says to proceed.
+
+---
+
+## Session 1 (continued): Stage P1 — Workspaces and shared package (P2-002 to P2-007)
+
+Joseph asked Claude to implement every task in `tasks-phase2.md` and test each one properly.
+
+- **P2-002: root npm workspaces.**
+  - A root `package.json` with workspaces `packages/*` and `frontend`. `backend` joins at P2-008.
+  - There is now one root `package-lock.json`. The frontend lockfile and `node_modules` were removed.
+  - ⚠ A `next dev` that was already running had to be restarted: `cd frontend && npm run dev`.
+- **P2-003: `packages/shared` (`@nivora/shared`).**
+  - Its `exports` point to the built CommonJS `dist/` with type declarations. Node and the backend use that.
+  - The frontend maps `@nivora/shared/*` to the TypeScript **source** through tsconfig `paths`, plus `transpilePackages`. So Next compiles it like app code and no watch build is needed.
+  - The package has no `"type"` field, because Turbopack rejects ESM source under `"type": "commonjs"`.
+  - A lint script blocks React/Next/Nest/Prisma imports and the `@/` alias inside the package.
+- **P2-004: domain moved.**
+  - `domain/*`, `config/constants`, `config/indianStates` and `listingParams` now live in shared.
+  - So does `lib/format`, which `domain/filters` needs for price labels.
+  - Every import was rewritten to `@nivora/shared/...`. The ESLint boundaries were updated, and `.prettierrc` moved to the repo root.
+- **P2-005: contracts, errors and data moved.**
+  - Moved to shared: `contracts`, `errors`, all `data/*`, and `INFO_PAGES` (now `config/infoPages`).
+  - The ESLint "data only inside `src/api`" rule now targets `@nivora/shared/data`.
+  - Bundle check: the product catalog is still in a single lazily loaded chunk and in none of the initial scripts.
+- **P2-006: Jest in shared.**
+  - `variantSelection` also moved to shared (pure, and needed by the backend).
+  - 7 suites with 89 tests port every Phase 1 domain scenario. All pass.
+  - Coverage is about 98% of lines and 88% of branches. A deliberate rule change (free delivery 499 → 500) is caught.
+- **P2-007: regression.**
+  - A clean build passes all the Phase 1 HTTP suites, the link crawl (209 URLs), the a11y audit, the protected-route guard check and all the node suites.
+  - Screenshots are unchanged.
+  - One old script (`check-stage7-11`) flagged static headings in the RSC payload. It predates the TASK-060 "visible HTML only" rule, and the pages weren't touched, so the script was aligned with that rule.
+- **Progress:** 7 / 39.
+
+### Next step
+
+Stage P2: scaffold the NestJS backend (P2-008 to P2-011).
+
+---
+
+## Session 1 (continued): Stage P2 — Backend scaffold (P2-008 to P2-011)
+
+- **P2-008: NestJS scaffold.**
+  - **Discoveries:**
+    - Nest 12 is **ESM-only**.
+    - Its own scaffold now defaults to Vitest + oxlint.
+    - Its CLI needs **TypeScript ≥ 6**.
+  - **Decisions:**
+    - The backend is an ES module app.
+    - The approved **Jest** stays (native ESM mode) with ESLint, aligned with the frontend.
+    - The whole repo moved to TypeScript 6.0 (one compiler; frontend and shared re-verified).
+  - The scaffold was written by hand from a reference `nest new`. It serves on port 4000.
+- **P2-009: config and bootstrap.**
+  - A Zod env schema: the app refuses to start and lists each bad variable, without echoing values.
+  - `/api/v1` prefix, helmet, request id plus a one-line log, JSON-only bodies, and an Origin check for mutating requests (403/415).
+  - `@nestjs/throttler` was **replaced** by a ~70-line in-house rate-limit guard. Throttler is CommonJS and can't load ESM-only Nest 12 under Jest on Node 22. Behaviour is the same and there is one fewer dependency.
+- **P2-010: error envelope.**
+  - Customer messages (`errorMessages`) and the `validate()` helper moved to the shared package, so the API and UI show identical req §28 text.
+  - New codes: `FORBIDDEN` and `RATE_LIMITED`.
+  - A global filter maps every error to `{error:{code,message,details}}` using the status table now in barch §7. Unexpected errors become UNKNOWN 500 with no internals.
+  - A `ZodValidationPipe` uses the shared schemas.
+- **P2-011: Prisma 7.10 on Neon.**
+  - `prisma.config.ts`, a generated ESM client, `PrismaService` with `@prisma/adapter-pg`, and `GET /api/v1/health`.
+  - **Module format decided: ESM throughout.**
+  - **Bug found and fixed:** every Node connection to Neon timed out. Node's happy-eyeballs limit (250 ms per address) is shorter than the ~400 ms round trip from India to us-east-2. A 2 s per-attempt timeout fixed it (proved 0/8 → 8/8).
+  - New connections take ~2 s and queries ~250 ms, which strengthens the case for an Asia-region Neon project before launch.
+- **Tests:**
+  - shared Jest 107;
+  - backend unit 37 and e2e 15, all passing against the `nivora_test` schema.
+- **Progress:** 11 / 39.
+
+### Next step
+
+Stage P3: the Prisma schema and first migration, the idempotent seed, and the guarded test harness (P2-012 to P2-014).
+
+---
+
+## Session 1 (continued): Stage P3 — Database (P2-012 to P2-014)
+
+- **P2-012: schema and first migration.**
+  - 14 tables and 3 enums, following barch §6, with refinements:
+    - `position` columns keep the Phase 1 ordering;
+    - `timestamptz` timestamps;
+    - cascades on customer-owned rows.
+  - The hand-written migration SQL adds 6 CHECK constraints (stock ≥ 0, price ≤ MRP, quantities ≥ 1, the Buy Now shape, order totals adding up) and `order_number_seq`.
+  - The migration was applied to `public` and `nivora_test`, with no drift.
+  - Each constraint was proved to reject bad rows in a rolled-back transaction.
+- **P2-013: idempotent seed.**
+  - Because each Neon round trip from India costs ~250 ms, the seed bulk-inserts what is missing and updates only rows that actually differ.
+  - Live stock and customer data are never touched. `--reset` is refused in production.
+  - `npm run db:check` compares the database with the shared catalog field by field.
+  - The real database (`public`) now holds 5/24/154/346, Joseph and 4 sample orders. The stock total of 7180 matches Phase 1, and the next order number is NIV-2026-000005.
+  - **Important bug found and fixed:** Prisma's adapter `schema` option only covers generated queries, while raw SQL ran against `public`. Nothing in `public` was written. All raw SQL now goes through a schema-qualifying helper, and ESLint bans the unsafe raw APIs.
+- **P2-014: test harness.**
+  - The guard refuses anything but `nivora_test` (proved with a run pointed at `public`).
+  - Global setup runs migrate deploy plus seed reset on the test schema only.
+  - `PrismaService` has a second guard.
+  - There is a cookie-jar test client.
+  - A test proves Prisma writes land in `nivora_test` and not in `public`.
+  - Two consecutive e2e runs passed, with `public` identical before and after.
+- **Tests:** root `npm test` passes shared 107, backend unit 40 and backend e2e 19.
+- **Progress:** 14 / 39.
+
+### Next step
+
+Stage P4: the catalog and content API with parity tests against the Phase 1 pipeline (P2-015 to P2-017).
+
+---
+
+## Session 1 (continued): Stage P4 — Catalog and content API (P2-015 to P2-017)
+
+- **Wire format:**
+  - New shared `toApiSearch` / `fromApiSearch`: the listing URL parameters plus `in_category` / `in_collection`, with an explicit sort.
+  - The frontend adapter and the API use the same code, and the round trip is proven exact.
+- **Catalog engine:**
+  - The API keeps an in-memory catalog loaded from the database at startup.
+  - It reads **live stock** from the database on every request and runs the shared Phase 1 pipeline.
+  - In responses, a variant's `initialStock` is its current stock, so the shared rules work unchanged.
+- **Endpoints:** `GET /categories`, `/products/slugs`, `/collections/:id?limit=`, `/products`, `/products/:slug` (with `available`), and `/content/pages/:slug`. Unknown items return 404 envelopes.
+- **Parity:** 42 listing pages (every category, filter type, sort, search, collection, pagination case and garbage input) return exactly what the Phase 1 pipeline returns on the same stock, facets included.
+- **Live stock:**
+  - Zeroing a product's stock removes it from "In stock only" and moves it to the out-of-stock tail immediately.
+  - Product pages show stock changes on the next request.
+- **Test mistake fixed:** the test assumed Best Sellers sorts by rating; the shared data says `relevance`, which the API returned correctly.
+- **Tests:** shared 117, backend unit 40, backend e2e 79.
+- **Progress:** 17 / 39.
+
+### Next step
+
+Stage P5: sessions, auth and profile (P2-018 to P2-020).
+
+---
+
+## Session 1 (continued): Stage P5 — Sessions, auth and profile (P2-018 to P2-020)
+
+- **P2-018: sessions.**
+  - A 32-byte random token is set in the `nivora_session` cookie (HttpOnly, SameSite=Lax, Secure per env, 30 days, sliding). Only its SHA-256 hash is stored.
+  - Unknown or expired sessions count as guests, and the cookie is cleared.
+  - Session lookup is **lazy**: catalog requests never pay for it.
+  - `AuthGuard` (401), `OptionalAuthGuard` and `@CurrentUser()`.
+- **Joseph asked:** make sure the predefined test user (joseph@example.com / password123, req §7.1) is in the database, so login works from the start.
+  - **Confirmed:** Joseph is in the real `public` database. The seed created him in P2-013 with an argon2id hash.
+  - The seed recreates him if he's missing and never overwrites him.
+  - A **live login against the real database works**, including with mixed-case email. The e2e suite also tests this login on every run.
+- **P2-019: auth endpoints.**
+  - `GET /auth/session`, `POST /auth/signup` / `login` / `logout`.
+  - Generic `INVALID_CREDENTIALS` for every login failure.
+  - `EMAIL_TAKEN` 409 with the field message.
+  - A new token on each login.
+  - Logout keeps all data except the session and a pending Buy Now.
+  - Rate limits: per IP, plus an email lock after 5 failed logins.
+  - 14 e2e scenarios ported from Phase 1.
+- **P2-020: profile.** `GET` and `PATCH /me`: name and optional phone; email is read-only. 4 e2e tests.
+- **Tests:** shared 117, backend unit 44, backend e2e 103.
+- **Progress:** 20 / 39.
+
+### Next step
+
+Stage P6: server-side carts with a guest cookie, merge on login, and wishlist (P2-021 to P2-023).
+
+---
+
+## Session 1 (continued): Stage P6 — Carts and wishlist (P2-021 to P2-023)
+
+- **Joseph asked:** finish up to Stage P7 now, then wait for his confirmation before Stage P8 (frontend integration).
+- **Shared change:** cart line resolution (`resolveLines`) moved to the shared package. The API and the mock adapter now compute carts and totals identically, and the mock suites still pass.
+- **P2-021: carts.**
+  - A server-side cart for customers, or for guests via an anonymous `nivora_cart` cookie (hashed token, created on the first add only).
+  - Every read revalidates against live stock and computes totals on the server.
+  - The Phase 1 cart scenarios ran for both a guest and a customer (16 e2e tests).
+- **P2-022: merge on login/signup.**
+  - One transaction using the shared `mergeCarts`: overlaps summed and capped at stock. The guest cart and its cookie are removed, and `mergedSavedItems` is returned.
+  - 5 e2e tests.
+- **P2-023: wishlist.**
+  - Get, add (idempotent), remove, and move-to-cart in one transaction with stock checks.
+  - 6 e2e tests.
+- **Progress:** 23 / 39.
+
+---
+
+## Session 1 (continued): Stage P7 — Addresses, checkout and orders (P2-024 to P2-028)
+
+- **P2-024: addresses.**
+  - CRUD plus "set default". There is always exactly one default (the first address; deleting it promotes the next).
+  - `INVALID_ADDRESS` with field messages.
+  - Another customer's address returns 404.
+- **P2-025: checkout.**
+  - Buy Now (limited by full stock; it replaces the pending one and leaves the cart alone), cart checkout, and the checkout view with server totals per delivery option.
+  - Delivery is ₹40 below ₹499 and Express is ₹99.
+- **P2-026: Place Order.**
+  - One transaction that re-validates everything and **conditionally decrements stock** (`WHERE stock >= q`).
+  - Numbers orders from the sequence and snapshots items and the address.
+  - Clears the cart lines or the Buy Now.
+  - An `Idempotency-Key` retry, even a simultaneous one, returns the same order.
+  - A failure writes nothing.
+- **P2-027: order history and cancel.**
+  - Newest first, own orders only.
+  - Cancel is a conditional update: Placed/Confirmed only, stock restored exactly once, never for sample orders.
+  - Tested with Joseph's seeded account and sample orders.
+- **P2-028: concurrency, 5 rounds each.**
+  - 10 simultaneous orders for 3 units → exactly 3 succeed and stock ends at 0.
+  - 5 parallel orders with one key → one order.
+  - 5 parallel cancels → stock restored once.
+  - No negative stock anywhere, and all totals add up.
+- **Performance finding:** each database round trip to Neon in us-east-2 costs ~250–300 ms from India.
+  - Measured: add to cart 4.7 s, place order 5.3 s.
+  - The logic is correct but slow. Planned fixes: fewer round trips (P2-037) and, mainly, an Asia-region database (barch §21).
+- **Joseph asked:** commit and push before Stage P8, then wait for his go-ahead on frontend integration.
+- **Progress:** 28 / 39. Stages P0–P7 are complete.
+
+### Next step
+
+Stage P8 (frontend integration), after Joseph confirms.

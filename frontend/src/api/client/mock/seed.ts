@@ -1,5 +1,5 @@
-import { SEED_ORDER_COUNTER, SEED_ORDERS } from "@/data/seedOrders";
-import { TEST_USER } from "@/data/seedUsers";
+import { SEED_ORDER_COUNTER, SEED_ORDERS } from "@nivora/shared/data/seedOrders";
+import { TEST_USER } from "@nivora/shared/data/seedUsers";
 import type { OrdersRecord, StoredUser } from "./records";
 import { isArray, isNumber, KEYS, read, write } from "./storage";
 

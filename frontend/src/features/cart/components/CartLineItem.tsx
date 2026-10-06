@@ -5,10 +5,10 @@ import { TrashIcon } from "@/components/icons";
 import { IconButton } from "@/components/ui/IconButton";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { paths } from "@/config/routes";
-import { formatOptions } from "@/domain/catalog";
-import type { ResolvedLine } from "@/domain/types";
+import { formatOptions } from "@nivora/shared/domain/catalog";
+import type { ResolvedLine } from "@nivora/shared/domain/types";
 import { QuantitySelector } from "@/features/product/components/QuantitySelector";
-import { formatPrice } from "@/lib/format";
+import { formatPrice } from "@nivora/shared/lib/format";
 import { cn } from "@/lib/cn";
 
 function issueText(line: ResolvedLine): string | null {

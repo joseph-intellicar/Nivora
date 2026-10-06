@@ -1,6 +1,6 @@
 "use client";
 
-import type { ProductSummary } from "@/domain/types";
+import type { ProductSummary } from "@nivora/shared/domain/types";
 import { liveInStock, useInventory } from "../hooks/useInventory";
 
 /**

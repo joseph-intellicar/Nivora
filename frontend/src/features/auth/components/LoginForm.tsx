@@ -3,13 +3,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
-import { isApiError } from "@/api/errors";
+import { isApiError } from "@nivora/shared/errors";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { paths } from "@/config/routes";
-import type { LoginInput } from "@/domain/types";
-import { loginSchema } from "@/domain/validation";
-import { getErrorMessage } from "@/lib/errorMessages";
+import type { LoginInput } from "@nivora/shared/domain/types";
+import { loginSchema } from "@nivora/shared/domain/validation";
+import { getErrorMessage } from "@nivora/shared/errorMessages";
 import { useLogin } from "../hooks/useAuthMutations";
 import { useFromParam } from "../useFromParam";
 import { AuthCard } from "./AuthCard";

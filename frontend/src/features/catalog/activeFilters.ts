@@ -1,7 +1,11 @@
-import type { Facets, ProductQuery } from "@/domain/types";
-import { formatPrice } from "@/lib/format";
+import type { Facets, ProductQuery } from "@nivora/shared/domain/types";
+import { formatPrice } from "@nivora/shared/lib/format";
 import { FILTER_LABELS, type FilterKey } from "./filterConfig";
-import { serialiseListingParams, withChange, type ListingContext } from "./listingParams";
+import {
+  serialiseListingParams,
+  withChange,
+  type ListingContext,
+} from "@nivora/shared/domain/listingParams";
 
 export type ActiveFilter = { key: string; label: string; search: string };
 

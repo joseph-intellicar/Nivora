@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { HeartFilledIcon, HeartIcon } from "@/components/icons";
-import type { ProductSummary } from "@/domain/types";
+import type { ProductSummary } from "@nivora/shared/domain/types";
 import { useRequireAuth } from "@/features/auth/hooks/useRequireAuth";
 import { cn } from "@/lib/cn";
 import { useToggleWishlist, useWishlist } from "../hooks/useWishlist";

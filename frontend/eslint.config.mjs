@@ -6,16 +6,22 @@ import prettier from "eslint-config-prettier/flat";
 /*
  * Architecture boundaries (docs/architecture.md §4 and §20).
  * Imports must use the "@/" alias so these rules can see them.
+ * Business rules (domain, validation, constants, formatting, listing params) live in the
+ * `@nivora/shared` package, which enforces its own purity (no React/Next/Nest imports).
  */
 
 const MOCK_AND_DATA = [
+  {
+    group: ["**/packages/shared/**"],
+    message: "Import shared code through the package: '@nivora/shared/...'.",
+  },
   {
     group: ["@/api/*/mock", "@/api/*/mock/*"],
     message: "Mock adapters are internal to src/api. Import from '@/api/client' or '@/api/server'.",
   },
   {
-    group: ["@/data", "@/data/*"],
-    message: "Mock data may only be read inside src/api.",
+    group: ["@nivora/shared/data", "@nivora/shared/data/*"],
+    message: "Catalog and seed data may only be read inside src/api.",
   },
 ];
 
@@ -51,7 +57,8 @@ const nivoraPlugin = {
       },
       create(context) {
         let isClientFile = false;
-        const serverOnly = /^@\/(api\/server|data)(\/|$)|^@\/api\/[^/]+\/mock(\/|$)/;
+        const serverOnly =
+          /^@\/api\/server(\/|$)|^@nivora\/shared\/data(\/|$)|^@\/api\/[^/]+\/mock(\/|$)/;
         return {
           Program(node) {
             isClientFile = node.body.some(
@@ -124,21 +131,6 @@ const eslintConfig = defineConfig([
       {
         group: ["@/features", "@/features/*", "@/api", "@/api/*"],
         message: "Shared UI components must not depend on features or the data layer.",
-      },
-    ]),
-  },
-
-  // Domain is pure TypeScript.
-  {
-    files: ["src/domain/**/*.ts"],
-    rules: restrictImports([
-      {
-        group: ["@/api", "@/api/*", "@/features", "@/features/*", "@/data", "@/data/*"],
-        message: "Domain code may only import config and lib.",
-      },
-      {
-        group: ["react", "react-dom", "next", "next/*"],
-        message: "Domain code must not depend on React or Next.js.",
       },
     ]),
   },

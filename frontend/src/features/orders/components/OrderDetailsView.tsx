@@ -6,7 +6,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { paths } from "@/config/routes";
 import { AddressText } from "@/features/addresses/components/AddressCard";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime } from "@nivora/shared/lib/format";
 import { isNotFound, useOrder } from "../hooks/useOrders";
 import { CancelOrderButton } from "./CancelOrderDialog";
 import { OrderItems } from "./OrderItems";

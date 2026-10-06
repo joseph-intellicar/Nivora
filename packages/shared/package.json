@@ -1,0 +1,40 @@
+{
+  "name": "@nivora/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Nivora business rules, validation, contracts and catalog data shared by the frontend and backend.",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    "./data/products": {
+      "types": "./dist/data/products/index.d.ts",
+      "default": "./dist/data/products/index.js"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "typecheck": "tsc -p tsconfig.test.json",
+    "lint": "node scripts/check-imports.mjs",
+    "format": "prettier --write src scripts",
+    "format:check": "prettier --check src scripts",
+    "test": "jest",
+    "test:coverage": "jest --coverage"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^20.19.43",
+    "jest": "^30.5.2",
+    "prettier": "^3.9.9",
+    "ts-jest": "^29.4.14",
+    "typescript": "~6.0.2"
+  }
+}

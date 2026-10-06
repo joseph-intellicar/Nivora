@@ -1,5 +1,5 @@
-import type { User } from "@/domain/types";
-import { ApiError } from "../../errors";
+import type { User } from "@nivora/shared/domain/types";
+import { ApiError } from "@nivora/shared/errors";
 import type { SessionRecord, StoredUser } from "./records";
 import { isArray, isRecord, KEYS, read, remove, write } from "./storage";
 

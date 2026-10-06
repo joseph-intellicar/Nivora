@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import type { PriceSummary as Summary } from "@/domain/types";
-import { formatPrice } from "@/lib/format";
+import type { PriceSummary as Summary } from "@nivora/shared/domain/types";
+import { formatPrice } from "@nivora/shared/lib/format";
 
 /** Order totals (requirements §17.3): MRP subtotal − discounts + delivery = total. From the data layer only. */
 export function PriceSummary({

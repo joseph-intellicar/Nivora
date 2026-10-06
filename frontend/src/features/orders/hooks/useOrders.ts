@@ -2,9 +2,9 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, queryKeys } from "@/api/client";
-import { isApiError } from "@/api/errors";
+import { isApiError } from "@nivora/shared/errors";
 import { useSession } from "@/features/auth/hooks/useSession";
-import { getErrorMessage } from "@/lib/errorMessages";
+import { getErrorMessage } from "@nivora/shared/errorMessages";
 import { toast } from "@/stores/toastStore";
 
 export function useOrders() {

@@ -1,0 +1,286 @@
+// Nivora database schema (docs/backend-architecture.md §6). Tables are snake_case via @@map.
+// CHECK constraints and the order-number sequence live in migration SQL (Prisma can't model them).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── Customers ────────────────────────────────────────────────────────
+
+model User {
+  id           String           @id @default(cuid())
+  name         String
+  /// Stored lower-cased and trimmed.
+  email        String           @unique
+  phone        String?
+  /// argon2id; the raw password is never stored.
+  passwordHash String
+  createdAt    DateTime         @default(now()) @db.Timestamptz(3)
+  sessions     Session[]
+  cart         Cart?
+  wishlist     WishlistItem[]
+  addresses    Address[]
+  orders       Order[]
+  checkout     CheckoutSession?
+
+  @@map("users")
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  /// SHA-256 of the cookie token; the raw token is never stored.
+  tokenHash  String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  expiresAt  DateTime @db.Timestamptz(3)
+  lastSeenAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName   String
+  phone      String
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  postalCode String
+  country    String   @default("India")
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+// ── Catalog ──────────────────────────────────────────────────────────
+
+model Category {
+  /// Equal to the URL slug, e.g. "fashion".
+  id            String        @id
+  name          String
+  description   String
+  position      Int
+  subcategories Subcategory[]
+
+  @@map("categories")
+}
+
+model Subcategory {
+  /// Globally unique, e.g. "fashion-men".
+  id         String    @id
+  /// Unique within the category, e.g. "men".
+  slug       String
+  name       String
+  position   Int
+  categoryId String
+  category   Category  @relation(fields: [categoryId], references: [id])
+  products   Product[]
+
+  @@unique([categoryId, slug])
+  @@map("subcategories")
+}
+
+model Product {
+  id             String         @id
+  slug           String         @unique
+  name           String
+  brand          String
+  description    String
+  images         String[]
+  rating         Decimal        @db.Decimal(2, 1)
+  reviewCount    Int
+  /// [{ label, value }]
+  specifications Json
+  /// [{ name, values[] }]
+  options        Json
+  /// Filter attributes that are not variant options (capacity, ageGroup, …).
+  attributes     Json
+  tags           String[]
+  isBestSeller   Boolean        @default(false)
+  isNewArrival   Boolean        @default(false)
+  createdAt      DateTime       @db.Timestamptz(3)
+  /// Order in the shared catalog (keeps listing tie-breaks identical to Phase 1).
+  position       Int
+  subcategoryId  String
+  subcategory    Subcategory    @relation(fields: [subcategoryId], references: [id])
+  variants       Variant[]
+  wishlistedBy   WishlistItem[]
+
+  @@index([subcategoryId])
+  @@map("products")
+}
+
+model Variant {
+  /// Stable, e.g. "apple-iphone-15-blue-128-gb".
+  id               String            @id
+  productId        String
+  product          Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  /// { "Color": "Blue", "Storage": "128 GB" }
+  optionValues     Json
+  /// Whole rupees.
+  price            Int
+  originalPrice    Int
+  /// Authoritative live stock (CHECK stock >= 0).
+  stock            Int
+  position         Int
+  cartItems        CartItem[]
+  pendingCheckouts CheckoutSession[]
+
+  @@index([productId])
+  @@map("variants")
+}
+
+// ── Cart, wishlist, checkout ─────────────────────────────────────────
+
+model Cart {
+  id         String     @id @default(cuid())
+  /// A customer's cart …
+  userId     String?    @unique
+  user       User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// … or a guest cart: SHA-256 of the guest cookie value.
+  guestToken String?    @unique
+  items      CartItem[]
+  createdAt  DateTime   @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime   @updatedAt @db.Timestamptz(3)
+
+  @@index([updatedAt])
+  @@map("carts")
+}
+
+/// One line per variant (req §17.2).
+model CartItem {
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variantId String
+  variant   Variant  @relation(fields: [variantId], references: [id])
+  /// CHECK quantity >= 1
+  quantity  Int
+  addedAt   DateTime @default(now()) @db.Timestamptz(3)
+
+  @@id([cartId, variantId])
+  @@map("cart_items")
+}
+
+/// No duplicates (req §18).
+model WishlistItem {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  addedAt   DateTime @default(now()) @db.Timestamptz(3)
+
+  @@id([userId, productId])
+  @@map("wishlist_items")
+}
+
+enum CheckoutSource {
+  cart
+  buy_now
+}
+
+enum DeliveryOption {
+  standard
+  express
+}
+
+/// The customer's current checkout: the cart or a pending Buy Now line (req §19).
+model CheckoutSession {
+  userId          String         @id
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  source          CheckoutSource
+  buyNowVariantId String?
+  buyNowVariant   Variant?       @relation(fields: [buyNowVariantId], references: [id])
+  /// CHECK buy_now_quantity >= 1 when present
+  buyNowQuantity  Int?
+  updatedAt       DateTime       @updatedAt @db.Timestamptz(3)
+
+  @@map("checkout_sessions")
+}
+
+// ── Orders ───────────────────────────────────────────────────────────
+
+enum OrderStatus {
+  Placed
+  Confirmed
+  Shipped
+  Delivered
+  Cancelled
+}
+
+model Order {
+  id              String             @id @default(cuid())
+  /// "NIV-2026-000123", numbered from order_number_seq.
+  orderNumber     String             @unique
+  customerId      String
+  customer        User               @relation(fields: [customerId], references: [id])
+  orderDate       DateTime           @default(now()) @db.Timestamptz(3)
+  source          CheckoutSource
+  /// MRP total.
+  subtotal        Int
+  discount        Int
+  deliveryOption  DeliveryOption
+  deliveryCharge  Int
+  /// CHECK total >= 0
+  total           Int
+  /// Address snapshot (req §24.2).
+  deliveryAddress Json
+  paymentMethod   String             @default("Cash on Delivery")
+  status          OrderStatus        @default(Placed)
+  /// Seeded sample order (req §25.5): never changes stock.
+  isSample        Boolean            @default(false)
+  /// Idempotency-Key header of the Place Order request (barch §11).
+  idempotencyKey  String?
+  items           OrderItem[]
+  history         OrderStatusEvent[]
+
+  @@unique([customerId, idempotencyKey])
+  @@index([customerId, orderDate])
+  @@map("orders")
+}
+
+/// Snapshot of the line at order time; product/variant ids are kept as plain values.
+model OrderItem {
+  id                String @id @default(cuid())
+  orderId           String
+  order             Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  position          Int
+  productId         String
+  variantId         String
+  productSlug       String
+  productName       String
+  brand             String
+  image             String
+  options           Json
+  quantity          Int
+  unitPrice         Int
+  unitOriginalPrice Int
+  discount          Int
+  lineTotal         Int
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+model OrderStatusEvent {
+  id      String      @id @default(cuid())
+  orderId String
+  order   Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status  OrderStatus
+  at      DateTime    @default(now()) @db.Timestamptz(3)
+
+  @@index([orderId, at])
+  @@map("order_status_events")
+}

@@ -1,8 +1,8 @@
 import type { QueryClient } from "@tanstack/react-query";
-import type { ClientApi } from "@/api/contracts";
+import type { ClientApi } from "@nivora/shared/contracts";
 import { queryKeys } from "@/api/client/queryKeys";
 import { paths, isSafeInternalPath } from "@/config/routes";
-import { getErrorMessage } from "@/lib/errorMessages";
+import { getErrorMessage } from "@nivora/shared/errorMessages";
 
 /** What a guest was trying to do before being asked to log in (requirements §6.1, arch §12.2). */
 export type PendingIntent =

@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { api, queryKeys } from "@/api/client";
-import type { ProductSummary, StockAdjustments } from "@/domain/types";
+import type { ProductSummary, StockAdjustments } from "@nivora/shared/domain/types";
 
 /** Stock adjustments from orders and cancellations stored in this browser (arch §3.1). */
 export function useInventory() {

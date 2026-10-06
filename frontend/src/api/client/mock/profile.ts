@@ -1,9 +1,9 @@
-import { profileSchema } from "@/domain/validation";
-import type { ProfileApi } from "../../contracts";
+import { profileSchema } from "@nivora/shared/domain/validation";
+import type { ProfileApi } from "@nivora/shared/contracts";
 import { request } from "./latency";
 import { readUsers, requireUser, toPublicUser } from "./session";
 import { KEYS, write } from "./storage";
-import { validate } from "./validate";
+import { validate } from "@nivora/shared/validate";
 
 export const mockProfile: ProfileApi = {
   get: () => request(() => toPublicUser(requireUser())),

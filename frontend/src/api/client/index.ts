@@ -1,4 +1,4 @@
-import type { ClientApi } from "../contracts";
+import type { ClientApi } from "@nivora/shared/contracts";
 import { mockAddresses } from "./mock/addresses";
 import { mockAuth } from "./mock/auth";
 import { mockCart } from "./mock/cart";

@@ -4,7 +4,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { useRouter } from "next/navigation";
 import { api, queryKeys } from "@/api/client";
 import { paths } from "@/config/routes";
-import type { DeliveryOption } from "@/domain/types";
+import type { DeliveryOption } from "@nivora/shared/domain/types";
 import { useSession } from "@/features/auth/hooks/useSession";
 
 /** Checkout items and totals for the chosen delivery option (requirements §20). */

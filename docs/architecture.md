@@ -148,6 +148,8 @@ Known Phase 1 limitation: after a customer buys the last unit of something, a se
 
 ## 5. Folder structure
 
+> **Phase 2 move (P2-004/P2-005):** `src/domain/*`, `src/config/constants.ts`, `src/config/indianStates.ts`, `src/lib/format.ts` and `features/catalog/listingParams.ts` now live in the shared package [`packages/shared/src`](../packages/shared/src) and are imported as `@nivora/shared/domain/...`, `@nivora/shared/config/...`, `@nivora/shared/lib/format` and `@nivora/shared/domain/listingParams`. Paths below describe the Phase 1 layout; see [`backend-architecture.md`](backend-architecture.md) §3.
+
 > Route files live in `src/app`. There is deliberately **no `src/pages` folder**: Next.js would treat it as the legacy Pages Router.
 
 ```
@@ -894,7 +896,7 @@ The in-house overlays and controls must provide:
 | `src/data` mock catalog | Becomes database seed data; removed from the frontend | None |
 | `NEXT_PUBLIC_ALLOW_INDEXING=false` | Set to `true` at public launch | None |
 
-Next.js remains the frontend. The backend lives in `backend/`, with its technology and database chosen at the start of Phase 2.
+Next.js remains the frontend. The backend lives in `backend/`: **NestJS + Prisma + Neon PostgreSQL**, designed in [`backend-architecture.md`](backend-architecture.md). Phase 2 decisions that refine this table: shared domain/validation/data move to an npm-workspace package `@nivora/shared`; sessions are database-backed HTTP-only cookies; guest carts live on the server behind an anonymous cookie.
 
 ## 22. Implementation plan
 

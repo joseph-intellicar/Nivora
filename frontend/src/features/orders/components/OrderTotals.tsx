@@ -1,6 +1,6 @@
-import { DELIVERY } from "@/config/constants";
-import type { Order } from "@/domain/types";
-import { formatPrice } from "@/lib/format";
+import { DELIVERY } from "@nivora/shared/config/constants";
+import type { Order } from "@nivora/shared/domain/types";
+import { formatPrice } from "@nivora/shared/lib/format";
 
 /** Order totals as charged (snapshot), with the payment method (requirements §25.4). */
 export function OrderTotals({ order }: { order: Order }) {

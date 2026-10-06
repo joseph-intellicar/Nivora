@@ -4,7 +4,7 @@ import { Price } from "@/components/ui/Price";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { Rating } from "@/components/ui/Rating";
 import { paths } from "@/config/routes";
-import type { ProductSummary } from "@/domain/types";
+import type { ProductSummary } from "@nivora/shared/domain/types";
 import { CardActions } from "@/features/cart/components/CardActions";
 import { WishlistButton } from "@/features/wishlist/components/WishlistButton";
 import { CardAvailability } from "./CardAvailability";

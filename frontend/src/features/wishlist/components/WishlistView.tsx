@@ -9,7 +9,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { IconButton } from "@/components/ui/IconButton";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { paths } from "@/config/routes";
-import type { ProductSummary } from "@/domain/types";
+import type { ProductSummary } from "@nivora/shared/domain/types";
 import { ProductCard } from "@/features/catalog/components/ProductCard";
 import { ProductGrid, ProductGridItem } from "@/features/catalog/components/ProductGrid";
 import { liveInStock, useInventory } from "@/features/catalog/hooks/useInventory";

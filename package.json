@@ -1,0 +1,22 @@
+{
+  "name": "nivora",
+  "private": true,
+  "description": "Nivora monorepo: Next.js frontend, NestJS backend and shared domain package.",
+  "workspaces": [
+    "packages/*",
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev -w frontend",
+    "dev:api": "npm run start:dev -w backend",
+    "build": "npm run build -w @nivora/shared && npm run build -w frontend && npm run build -w backend",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm test -w @nivora/shared && npm test -w backend && npm run test:e2e -w backend",
+    "format:check": "npm run format:check --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

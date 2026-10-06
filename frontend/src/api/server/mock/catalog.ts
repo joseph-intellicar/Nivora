@@ -1,11 +1,11 @@
-import { PAGE_SIZE } from "@/config/constants";
-import { CATEGORIES } from "@/data/categories";
-import { COLLECTIONS } from "@/data/collections";
-import { INFO_PAGES_CONTENT } from "@/data/infoPages";
-import { PRODUCTS } from "@/data/products";
-import { createTaxonomy } from "@/domain/catalog";
-import { queryCatalog } from "@/domain/filters";
-import type { CatalogApi, ContentApi } from "../../contracts";
+import { PAGE_SIZE } from "@nivora/shared/config/constants";
+import { CATEGORIES } from "@nivora/shared/data/categories";
+import { COLLECTIONS } from "@nivora/shared/data/collections";
+import { INFO_PAGES_CONTENT } from "@nivora/shared/data/infoPages";
+import { PRODUCTS } from "@nivora/shared/data/products";
+import { createTaxonomy } from "@nivora/shared/domain/catalog";
+import { queryCatalog } from "@nivora/shared/domain/filters";
+import type { CatalogApi, ContentApi } from "@nivora/shared/contracts";
 
 /*
  * Phase 1 server catalog (arch §7.1): pure reads over the mock data, no storage, no latency.

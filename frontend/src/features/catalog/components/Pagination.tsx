@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/icons";
-import type { ProductQuery } from "@/domain/types";
+import type { ProductQuery } from "@nivora/shared/domain/types";
 import { cn } from "@/lib/cn";
-import { serialiseListingParams, type ListingContext } from "../listingParams";
+import { serialiseListingParams, type ListingContext } from "@nivora/shared/domain/listingParams";
 
 /** Numbered pages as real links, so crawlers and Back/Forward work (arch §10.4). */
 export function Pagination({

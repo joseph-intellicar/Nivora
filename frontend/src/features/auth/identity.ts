@@ -1,6 +1,6 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { queryKeys, USER_SCOPED_ROOTS } from "@/api/client";
-import type { User } from "@/domain/types";
+import type { User } from "@nivora/shared/domain/types";
 
 /**
  * Called on login, signup and logout (arch §11.1): stores the new identity and removes every

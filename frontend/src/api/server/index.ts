@@ -1,4 +1,4 @@
-import type { CatalogApi, ContentApi } from "../contracts";
+import type { CatalogApi, ContentApi } from "@nivora/shared/contracts";
 import { getCollectionMeta, mockCatalog, mockContent } from "./mock/catalog";
 
 /**

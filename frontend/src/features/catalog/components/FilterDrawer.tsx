@@ -4,7 +4,7 @@ import { useState, type ReactNode } from "react";
 import { FilterIcon } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
 import { Drawer } from "@/components/ui/Drawer";
-import { formatCount } from "@/lib/format";
+import { formatCount } from "@nivora/shared/lib/format";
 
 /** Mobile/tablet filters (requirements §30): a drawer; changes apply immediately. */
 export function FilterDrawer({

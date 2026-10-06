@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { paths } from "@/config/routes";
-import { formatOptions } from "@/domain/catalog";
-import type { OrderItem } from "@/domain/types";
-import { formatPrice } from "@/lib/format";
+import { formatOptions } from "@nivora/shared/domain/catalog";
+import type { OrderItem } from "@nivora/shared/domain/types";
+import { formatPrice } from "@nivora/shared/lib/format";
 
 /** Snapshotted order items (requirements §25.4): variants, quantities, prices, discounts. */
 export function OrderItems({ items }: { items: OrderItem[] }) {

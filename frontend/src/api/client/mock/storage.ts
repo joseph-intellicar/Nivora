@@ -1,4 +1,4 @@
-import { ApiError } from "../../errors";
+import { ApiError } from "@nivora/shared/errors";
 
 /*
  * The ONLY module that touches browser storage (requirements §5.1, arch §8).

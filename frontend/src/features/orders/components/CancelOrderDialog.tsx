@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
-import type { Order } from "@/domain/types";
-import { canCancel } from "@/domain/orders";
+import type { Order } from "@nivora/shared/domain/types";
+import { canCancel } from "@nivora/shared/domain/orders";
 import { useCancelOrder } from "../hooks/useOrders";
 
 /** Cancel Order with a confirmation step; only for Placed / Confirmed (requirements §25.2). */

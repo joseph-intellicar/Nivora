@@ -1,4 +1,4 @@
-import type { CartLine } from "@/domain/types";
+import type { CartLine } from "@nivora/shared/domain/types";
 import type { CartRecord } from "./records";
 import { isRecord, KEYS, read, write } from "./storage";
 

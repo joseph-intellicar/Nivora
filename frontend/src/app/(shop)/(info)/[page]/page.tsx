@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { content } from "@/api/server";
 import { Container } from "@/components/layout/Container";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
-import { INFO_PAGES, paths } from "@/config/routes";
+import { INFO_PAGES } from "@nivora/shared/config/infoPages";
+import { paths } from "@/config/routes";
 import { pageMetadata } from "@/features/seo/metadata";
 
 // Only the six footer pages exist; any other single-segment URL is a static 404.

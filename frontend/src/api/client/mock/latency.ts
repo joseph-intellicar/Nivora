@@ -1,5 +1,5 @@
 import { siteConfig } from "@/config/site";
-import { ApiError } from "../../errors";
+import { ApiError } from "@nivora/shared/errors";
 import { ensureSeeded } from "./seed";
 
 function delay(ms: number): Promise<void> {

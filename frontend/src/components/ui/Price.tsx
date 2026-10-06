@@ -1,4 +1,4 @@
-import { formatPrice } from "@/lib/format";
+import { formatPrice } from "@nivora/shared/lib/format";
 import { cn } from "@/lib/cn";
 
 type PriceProps = {

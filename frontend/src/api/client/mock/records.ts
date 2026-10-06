@@ -1,4 +1,4 @@
-import type { Address, CartLine, CheckoutSource, Order } from "@/domain/types";
+import type { Address, CartLine, CheckoutSource, Order } from "@nivora/shared/domain/types";
 
 /** Shapes persisted by the mock adapters (arch §8). */
 

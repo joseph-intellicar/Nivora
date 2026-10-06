@@ -3,9 +3,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { api } from "@/api/client";
-import type { AuthResult } from "@/api/contracts";
+import type { AuthResult } from "@nivora/shared/contracts";
 import { paths } from "@/config/routes";
-import type { LoginInput, SignupInput } from "@/domain/types";
+import type { LoginInput, SignupInput } from "@nivora/shared/domain/types";
 import { toast } from "@/stores/toastStore";
 import { useAuthFlowStore, useLoginPromptStore } from "@/stores/loginPromptStore";
 import { applyIdentity } from "../identity";

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/Badge";
-import type { Address } from "@/domain/types";
+import type { Address } from "@nivora/shared/domain/types";
 
 /** Address text block, shared by address cards, checkout and orders. */
 export function AddressText({

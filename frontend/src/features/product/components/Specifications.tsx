@@ -1,4 +1,4 @@
-import type { Specification } from "@/domain/types";
+import type { Specification } from "@nivora/shared/domain/types";
 
 /** Specifications table (requirements §16.1). */
 export function Specifications({ specifications }: { specifications: Specification[] }) {

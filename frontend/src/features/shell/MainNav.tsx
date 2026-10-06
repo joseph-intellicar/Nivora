@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { ChevronDownIcon } from "@/components/icons";
 import { Container } from "@/components/layout/Container";
 import { paths } from "@/config/routes";
-import type { Category } from "@/domain/types";
+import type { Category } from "@nivora/shared/domain/types";
 import { cn } from "@/lib/cn";
 
 /**

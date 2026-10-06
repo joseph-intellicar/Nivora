@@ -1,4 +1,4 @@
-import type { CategoryId } from "@/domain/types";
+import type { CategoryId } from "@nivora/shared/domain/types";
 
 /** Filter sections, in display order, for each listing context (arch §13.2). */
 export type FilterKey =

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { paths } from "@/config/routes";
-import type { Category, FacetOption } from "@/domain/types";
+import type { Category, FacetOption } from "@nivora/shared/domain/types";
 import { cn } from "@/lib/cn";
 
 /**

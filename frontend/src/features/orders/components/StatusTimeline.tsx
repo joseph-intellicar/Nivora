@@ -1,7 +1,7 @@
 import { CheckIcon } from "@/components/icons";
-import type { Order, OrderStatus } from "@/domain/types";
+import type { Order, OrderStatus } from "@nivora/shared/domain/types";
 import { cn } from "@/lib/cn";
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime } from "@nivora/shared/lib/format";
 
 const FLOW: OrderStatus[] = ["Placed", "Confirmed", "Shipped", "Delivered"];
 

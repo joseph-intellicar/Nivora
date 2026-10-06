@@ -1,4 +1,4 @@
-import type { Product, Variant } from "@/domain/types";
+import type { Product, Variant } from "@nivora/shared/domain/types";
 
 export type CatalogIndex = {
   products: Product[];
@@ -14,7 +14,7 @@ let cached: Promise<CatalogIndex> | null = null;
  * not part of the initial bundle (arch §19). Same data the server catalog reads.
  */
 export function loadCatalog(): Promise<CatalogIndex> {
-  cached ??= import("@/data/products").then(({ PRODUCTS }) => ({
+  cached ??= import("@nivora/shared/data/products").then(({ PRODUCTS }) => ({
     products: PRODUCTS,
     byId: new Map(PRODUCTS.map((product) => [product.id, product])),
     bySlug: new Map(PRODUCTS.map((product) => [product.slug, product])),

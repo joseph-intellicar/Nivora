@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Business rules, contracts and catalog data live in the `@nivora/shared` workspace package
+  // (barch §3). tsconfig `paths` points the frontend at its TypeScript source, so Next compiles
+  // it like app code (fast refresh, tree shaking); Node and the backend use its built `dist/`.
+  transpilePackages: ["@nivora/shared"],
   // Resolve metadata before sending HTML for every client (not only HTML-limited bots), so
   // titles, canonical URLs and 404 pages are always in the initial HTML (arch §10). Catalog reads
   // are in-memory, so blocking costs only milliseconds.

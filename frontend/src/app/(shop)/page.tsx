@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { catalog } from "@/api/server";
-import { HOME_SECTION_LIMIT } from "@/config/constants";
+import { HOME_SECTION_LIMIT } from "@nivora/shared/config/constants";
 import { paths } from "@/config/routes";
 import { siteConfig } from "@/config/site";
 import { HeroBanner } from "@/features/catalog/components/HeroBanner";

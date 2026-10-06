@@ -4,10 +4,14 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Radio } from "@/components/ui/Radio";
-import type { FacetOption, Facets, ProductQuery } from "@/domain/types";
-import { formatCount } from "@/lib/format";
+import type { FacetOption, Facets, ProductQuery } from "@nivora/shared/domain/types";
+import { formatCount } from "@nivora/shared/lib/format";
 import { FILTER_LABELS, type FilterKey } from "../filterConfig";
-import { serialiseListingParams, withChange, type ListingContext } from "../listingParams";
+import {
+  serialiseListingParams,
+  withChange,
+  type ListingContext,
+} from "@nivora/shared/domain/listingParams";
 import { useListingNavigation } from "./ListingNavigation";
 
 type FilterPanelProps = {

@@ -1,7 +1,7 @@
-import { cancelOrder, canCancel, toOrderSummary } from "@/domain/orders";
-import type { Order } from "@/domain/types";
-import type { OrderApi } from "../../contracts";
-import { ApiError } from "../../errors";
+import { cancelOrder, canCancel, toOrderSummary } from "@nivora/shared/domain/orders";
+import type { Order } from "@nivora/shared/domain/types";
+import type { OrderApi } from "@nivora/shared/contracts";
+import { ApiError } from "@nivora/shared/errors";
 import { adjustStock } from "./inventory";
 import { request } from "./latency";
 import type { OrdersRecord } from "./records";

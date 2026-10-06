@@ -1,8 +1,8 @@
 "use client";
 
-import type { Product, StockAdjustments } from "@/domain/types";
+import type { Product, StockAdjustments } from "@nivora/shared/domain/types";
 import { cn } from "@/lib/cn";
-import { valueState, type Selection } from "../variantSelection";
+import { valueState, type Selection } from "@nivora/shared/domain/variantSelection";
 
 type VariantSelectorProps = {
   product: Product;

@@ -1,4 +1,4 @@
-import type { ClientCatalogApi } from "../../contracts";
+import type { ClientCatalogApi } from "@nivora/shared/contracts";
 import { loadCatalog } from "./catalogData";
 import { available, readAdjustments } from "./inventory";
 import { request } from "./latency";

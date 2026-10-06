@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { INFO_PAGES, paths, type InfoPageSlug } from "@/config/routes";
+import { INFO_PAGES, type InfoPageSlug } from "@nivora/shared/config/infoPages";
+import { paths } from "@/config/routes";
 import { Container } from "./Container";
 import { Logo } from "./Logo";
 

@@ -6,14 +6,14 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
 import { api, queryKeys } from "@/api/client";
-import { isApiError } from "@/api/errors";
+import { isApiError } from "@nivora/shared/errors";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import type { ProfileInput } from "@/domain/types";
-import { profileSchema } from "@/domain/validation";
+import type { ProfileInput } from "@nivora/shared/domain/types";
+import { profileSchema } from "@nivora/shared/domain/validation";
 import { FormAlert } from "@/features/auth/components/FormAlert";
 import { useSession } from "@/features/auth/hooks/useSession";
-import { getErrorMessage } from "@/lib/errorMessages";
+import { getErrorMessage } from "@nivora/shared/errorMessages";
 import { toast } from "@/stores/toastStore";
 
 type FormValues = z.input<typeof profileSchema>;

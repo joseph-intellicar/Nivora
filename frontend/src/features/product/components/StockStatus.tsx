@@ -1,5 +1,5 @@
 import { CheckIcon, InfoIcon } from "@/components/icons";
-import { stockStatus } from "@/domain/stock";
+import { stockStatus } from "@nivora/shared/domain/stock";
 
 /** In stock / Only N left / Out of Stock (requirements §16.1, §35). */
 export function StockStatus({ available }: { available: number }) {

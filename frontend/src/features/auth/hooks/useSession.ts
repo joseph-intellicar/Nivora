@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { api, queryKeys } from "@/api/client";
-import type { User } from "@/domain/types";
+import type { User } from "@nivora/shared/domain/types";
 
 export type SessionState = {
   user: User | null;

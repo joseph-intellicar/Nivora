@@ -1,13 +1,13 @@
-import type { Address } from "@/domain/types";
-import { addressSchema } from "@/domain/validation";
+import type { Address } from "@nivora/shared/domain/types";
+import { addressSchema } from "@nivora/shared/domain/validation";
 import { createId } from "@/lib/ids";
-import type { AddressApi } from "../../contracts";
-import { ApiError } from "../../errors";
+import type { AddressApi } from "@nivora/shared/contracts";
+import { ApiError } from "@nivora/shared/errors";
 import { request } from "./latency";
 import type { AddressRecord } from "./records";
 import { requireUser } from "./session";
 import { isRecord, KEYS, read, write } from "./storage";
-import { validate } from "./validate";
+import { validate } from "@nivora/shared/validate";
 
 export function readAddresses(userId: string): Address[] {
   const list = read<AddressRecord>(KEYS.addresses, {}, isRecord)[userId];

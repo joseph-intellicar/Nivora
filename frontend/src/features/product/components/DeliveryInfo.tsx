@@ -1,6 +1,6 @@
 import { CheckIcon, PackageIcon, TruckIcon } from "@/components/icons";
-import { DELIVERY } from "@/config/constants";
-import { formatPrice } from "@/lib/format";
+import { DELIVERY } from "@nivora/shared/config/constants";
+import { formatPrice } from "@nivora/shared/lib/format";
 
 /** Delivery & services summary on Product Details (requirements §22, §23). Phase 1 facts only. */
 export function DeliveryInfo() {

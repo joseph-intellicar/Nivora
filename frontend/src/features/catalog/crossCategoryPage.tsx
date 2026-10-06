@@ -1,9 +1,13 @@
 import { catalog } from "@/api/server";
 import { paths } from "@/config/routes";
-import type { Collection } from "@/domain/types";
+import type { Collection } from "@nivora/shared/domain/types";
 import { ProductListing } from "./components/ProductListing";
 import { crossCategoryFilters } from "./filterConfig";
-import { parseListingParams, type ListingContext, type RawSearchParams } from "./listingParams";
+import {
+  parseListingParams,
+  type ListingContext,
+  type RawSearchParams,
+} from "@nivora/shared/domain/listingParams";
 
 /** Collection and search listings: Category/Subcategory + common filters (arch §13.2). */
 export async function CrossCategoryListing({

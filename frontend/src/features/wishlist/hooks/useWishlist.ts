@@ -2,9 +2,9 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, queryKeys } from "@/api/client";
-import type { ProductSummary } from "@/domain/types";
+import type { ProductSummary } from "@nivora/shared/domain/types";
 import { useSession } from "@/features/auth/hooks/useSession";
-import { getErrorMessage } from "@/lib/errorMessages";
+import { getErrorMessage } from "@nivora/shared/errorMessages";
 import { toast } from "@/stores/toastStore";
 
 /** The customer's wishlist; empty and disabled for guests (requirements §18). */

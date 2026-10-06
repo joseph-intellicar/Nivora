@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
 import { catalog } from "@/api/server";
 import { paths } from "@/config/routes";
-import type { Category, Subcategory } from "@/domain/types";
+import type { Category, Subcategory } from "@nivora/shared/domain/types";
 import { ProductListing } from "./components/ProductListing";
 import { SubcategoryNav } from "./components/SubcategoryNav";
 import { CATEGORY_FILTERS } from "./filterConfig";
-import { parseListingParams, type RawSearchParams } from "./listingParams";
+import { parseListingParams, type RawSearchParams } from "@nivora/shared/domain/listingParams";
 
 /** Category/subcategory for metadata; null when unknown (metadata must not throw notFound). */
 export async function findCategory(

@@ -7,22 +7,24 @@ Nivora is a modern consumer e-commerce web application.
 ```
 nivora/
 ├── frontend/         Customer-facing web app (Phase 1 focus)
-├── backend/          Placeholder — backend is built in Phase 2
-├── docs/             Project documentation (architecture.md)
+├── backend/          Phase 2 backend (NestJS + Prisma + Neon) — design ready, not scaffolded
+├── docs/             architecture.md, backend-architecture.md, manual-testing.md
 ├── requirements.md   Product requirements (source of truth)
 ├── conversation.md   Running log of working sessions and decisions
-├── tasks.md          Implementation roadmap with verification steps
+├── tasks.md          Phase 1 roadmap (complete)
+├── tasks-phase2.md   Phase 2 roadmap: backend + frontend integration
 ├── README.md
 └── .gitignore
 ```
 
 ## Project phases
 
-- **Phase 1 (current):** Frontend only. Uses mock product data, mock
+- **Phase 1 (complete):** Frontend only. Uses mock product data, mock
   authentication, and localStorage for persistence. Payment is Cash on
   Delivery only.
-- **Phase 2:** Real backend API and database in `backend/`, replacing the
-  Phase 1 mock/localStorage data layer without rewriting the UI.
+- **Phase 2 (next):** Real backend in `backend/` — **NestJS + TypeScript, Prisma, Neon
+  PostgreSQL** — replacing the Phase 1 mock/localStorage data layer without rewriting the UI.
+  Design: [`docs/backend-architecture.md`](docs/backend-architecture.md).
 
 See [`requirements.md`](requirements.md) for the full product requirements and
 [`docs/architecture.md`](docs/architecture.md) for the frontend architecture.

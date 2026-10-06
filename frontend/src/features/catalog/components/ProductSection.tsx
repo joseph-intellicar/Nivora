@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ChevronRightIcon } from "@/components/icons";
 import { Container } from "@/components/layout/Container";
-import type { ProductSummary } from "@/domain/types";
+import type { ProductSummary } from "@nivora/shared/domain/types";
 import { ProductCard } from "./ProductCard";
 import { ProductGrid, ProductGridItem } from "./ProductGrid";
 import type { ReactNode } from "react";

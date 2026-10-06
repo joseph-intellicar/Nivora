@@ -3,7 +3,7 @@ import { Container } from "@/components/layout/Container";
 import { buttonClasses } from "@/components/ui/Button";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { paths } from "@/config/routes";
-import type { ProductSummary } from "@/domain/types";
+import type { ProductSummary } from "@nivora/shared/domain/types";
 
 /** Home promotional banner (requirements §10): headline, supporting text, CTA and a visual. */
 export function HeroBanner({ showcase }: { showcase: ProductSummary[] }) {

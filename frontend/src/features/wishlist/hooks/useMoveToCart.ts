@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, queryKeys } from "@/api/client";
 import { paths } from "@/config/routes";
 import { useSession } from "@/features/auth/hooks/useSession";
-import { getErrorMessage } from "@/lib/errorMessages";
+import { getErrorMessage } from "@nivora/shared/errorMessages";
 import { toast } from "@/stores/toastStore";
 
 /** Moves a single-variant product from the wishlist to the cart (requirements §18). */

@@ -1,5 +1,7 @@
 # Nivora — Implementation Tasks (Phase 1)
 
+> Phase 1 is complete. Phase 2 (backend + integration) continues in [`tasks-phase2.md`](tasks-phase2.md).
+
 | | |
 |---|---|
 | **Based on** | [`requirements.md`](requirements.md) (req §) · [`docs/architecture.md`](docs/architecture.md) (arch §) · [`conversation.md`](conversation.md) |

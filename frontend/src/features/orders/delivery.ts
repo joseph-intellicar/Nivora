@@ -1,6 +1,6 @@
-import { DELIVERY } from "@/config/constants";
-import type { DeliveryOption } from "@/domain/types";
-import { formatDate } from "@/lib/format";
+import { DELIVERY } from "@nivora/shared/config/constants";
+import type { DeliveryOption } from "@nivora/shared/domain/types";
+import { formatDate } from "@nivora/shared/lib/format";
 
 const DAY = 24 * 60 * 60 * 1000;
 

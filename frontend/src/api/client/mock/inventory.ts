@@ -1,6 +1,6 @@
-import { effectiveStock } from "@/domain/stock";
-import type { StockAdjustments, Variant } from "@/domain/types";
-import type { InventoryApi } from "../../contracts";
+import { effectiveStock } from "@nivora/shared/domain/stock";
+import type { StockAdjustments, Variant } from "@nivora/shared/domain/types";
+import type { InventoryApi } from "@nivora/shared/contracts";
 import { request } from "./latency";
 import { isRecord, KEYS, read, write } from "./storage";
 

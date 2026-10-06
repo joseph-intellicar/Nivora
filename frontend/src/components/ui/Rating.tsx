@@ -1,6 +1,6 @@
 import { StarHalfIcon, StarIcon, StarOutlineIcon } from "@/components/icons";
 import { cn } from "@/lib/cn";
-import { formatCount } from "@/lib/format";
+import { formatCount } from "@nivora/shared/lib/format";
 
 type RatingProps = {
   /** Average rating from 0 to 5. */

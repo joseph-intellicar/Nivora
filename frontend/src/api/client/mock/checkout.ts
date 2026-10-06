@@ -1,9 +1,13 @@
-import { checkQuantity, removeLine } from "@/domain/cart";
-import { buildOrder, formatOrderId } from "@/domain/orders";
-import type { CartLine, CheckoutSource, DeliveryOption, Order } from "@/domain/types";
-import { addressSchema, cartItemInputSchema, deliveryOptionSchema } from "@/domain/validation";
-import type { CheckoutApi } from "../../contracts";
-import { ApiError } from "../../errors";
+import { checkQuantity, removeLine } from "@nivora/shared/domain/cart";
+import { buildOrder, formatOrderId } from "@nivora/shared/domain/orders";
+import type { CartLine, CheckoutSource, DeliveryOption, Order } from "@nivora/shared/domain/types";
+import {
+  addressSchema,
+  cartItemInputSchema,
+  deliveryOptionSchema,
+} from "@nivora/shared/domain/validation";
+import type { CheckoutApi } from "@nivora/shared/contracts";
+import { ApiError } from "@nivora/shared/errors";
 import { readAddresses } from "./addresses";
 import { readLines, writeLines } from "./cartStore";
 import { loadCatalog } from "./catalogData";

@@ -1,9 +1,13 @@
 "use client";
 
 import { Select } from "@/components/ui/Select";
-import { SORT_OPTIONS } from "@/domain/sort";
-import type { ProductQuery, SortOption } from "@/domain/types";
-import { serialiseListingParams, withChange, type ListingContext } from "../listingParams";
+import { SORT_OPTIONS } from "@nivora/shared/domain/sort";
+import type { ProductQuery, SortOption } from "@nivora/shared/domain/types";
+import {
+  serialiseListingParams,
+  withChange,
+  type ListingContext,
+} from "@nivora/shared/domain/listingParams";
 import { useListingNavigation } from "./ListingNavigation";
 
 /** Sort control (requirements §12.3); changing it updates the URL and returns to page 1. */

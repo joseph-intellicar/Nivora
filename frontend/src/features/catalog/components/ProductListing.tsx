@@ -8,8 +8,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { paths } from "@/config/routes";
 import { JsonLd } from "@/features/seo/JsonLd";
 import { breadcrumbLd, itemListLd } from "@/features/seo/structuredData";
-import type { ProductListResult, ProductQuery } from "@/domain/types";
-import { formatCount } from "@/lib/format";
+import type { ProductListResult, ProductQuery } from "@nivora/shared/domain/types";
+import { formatCount } from "@nivora/shared/lib/format";
 import { activeFilters } from "../activeFilters";
 import type { FilterKey } from "../filterConfig";
 import {
@@ -17,7 +17,7 @@ import {
   hasRefinements,
   serialiseListingParams,
   type ListingContext,
-} from "../listingParams";
+} from "@nivora/shared/domain/listingParams";
 import { ActiveFilterChips } from "./ActiveFilterChips";
 import { FilterDrawer } from "./FilterDrawer";
 import { FilterPanel } from "./FilterPanel";

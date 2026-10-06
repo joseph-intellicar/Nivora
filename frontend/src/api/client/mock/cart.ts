@@ -1,8 +1,14 @@
-import { addLine, checkQuantity, quantityInCart, removeLine, setLineQuantity } from "@/domain/cart";
-import type { CartView } from "@/domain/types";
-import { cartItemInputSchema } from "@/domain/validation";
-import type { CartApi } from "../../contracts";
-import { ApiError } from "../../errors";
+import {
+  addLine,
+  checkQuantity,
+  quantityInCart,
+  removeLine,
+  setLineQuantity,
+} from "@nivora/shared/domain/cart";
+import type { CartView } from "@nivora/shared/domain/types";
+import { cartItemInputSchema } from "@nivora/shared/domain/validation";
+import type { CartApi } from "@nivora/shared/contracts";
+import { ApiError } from "@nivora/shared/errors";
 import { readLines, writeLines } from "./cartStore";
 import { loadCatalog } from "./catalogData";
 import { available, readAdjustments } from "./inventory";

@@ -8,7 +8,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { paths } from "@/config/routes";
-import { formatDate, formatPrice } from "@/lib/format";
+import { formatDate, formatPrice } from "@nivora/shared/lib/format";
 import { useOrders } from "../hooks/useOrders";
 import { OrderStatusBadge } from "./OrderStatusBadge";
 

@@ -2,7 +2,7 @@
 
 import { CartIcon } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
-import type { ProductSummary } from "@/domain/types";
+import type { ProductSummary } from "@nivora/shared/domain/types";
 import { liveInStock, useInventory } from "@/features/catalog/hooks/useInventory";
 import { useVariantPickerStore } from "@/stores/variantPickerStore";
 import { useAddToCart } from "../hooks/useCart";

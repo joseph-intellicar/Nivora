@@ -5,14 +5,14 @@ import { useState } from "react";
 import { api } from "@/api/client";
 import { Button } from "@/components/ui/Button";
 import { paths } from "@/config/routes";
-import { maxAddable } from "@/domain/stock";
-import type { Product } from "@/domain/types";
+import { maxAddable } from "@nivora/shared/domain/stock";
+import type { Product } from "@nivora/shared/domain/types";
 import { useRequireAuth } from "@/features/auth/hooks/useRequireAuth";
 import { useAddToCart, useCart } from "@/features/cart/hooks/useCart";
 import { useInventory } from "@/features/catalog/hooks/useInventory";
 import { WishlistButton } from "@/features/wishlist/components/WishlistButton";
-import { formatPrice } from "@/lib/format";
-import { getErrorMessage } from "@/lib/errorMessages";
+import { formatPrice } from "@nivora/shared/lib/format";
+import { getErrorMessage } from "@nivora/shared/errorMessages";
 import { toast } from "@/stores/toastStore";
 import {
   clampQuantity,
@@ -22,7 +22,7 @@ import {
   selectedVariant,
   stockFor,
   type Selection,
-} from "../variantSelection";
+} from "@nivora/shared/domain/variantSelection";
 import { QuantitySelector } from "./QuantitySelector";
 import { DeliveryInfo } from "./DeliveryInfo";
 import { StockStatus } from "./StockStatus";
