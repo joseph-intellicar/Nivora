@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+/*
+ * Nivora design tokens (docs/architecture.md §17.1).
+ * Brand: deep "lagoon" teal. Accent: coral. Use token utilities (bg-brand-700, text-sale, …),
+ * never one-off hex values in components. Contrast pairs are checked against WCAG AA.
+ */
+
+@theme {
+  /* Brand — lagoon teal */
+  --color-brand-50: #effcf9;
+  --color-brand-100: #c9f5ec;
+  --color-brand-200: #94e9da;
+  --color-brand-300: #57d4c2;
+  --color-brand-400: #26b8a6;
+  --color-brand-500: #0d9c8c;
+  --color-brand-600: #0a7d72;
+  --color-brand-700: #0b645c;
+  --color-brand-800: #0d504b;
+  --color-brand-900: #0e423f;
+  --color-brand-950: #032826;
+
+  /* Accent — coral */
+  --color-accent-50: #fff4f1;
+  --color-accent-100: #ffe6df;
+  --color-accent-200: #ffcfc2;
+  --color-accent-300: #ffad97;
+  --color-accent-400: #ff7f5e;
+  --color-accent-500: #f85a35;
+  --color-accent-600: #c2361b;
+  --color-accent-700: #a12d16;
+
+  /* Neutrals */
+  --color-ink: #13201f;
+  --color-ink-muted: #4b5958;
+  --color-ink-subtle: #647170;
+  --color-canvas: #f6f8f8;
+  --color-surface: #ffffff;
+  --color-line: #dde3e2;
+  --color-line-strong: #7d8b8a;
+
+  /* Semantic */
+  --color-success: #127436;
+  --color-success-soft: #e8f6ee;
+  --color-warning: #a14a06;
+  --color-warning-soft: #fdf3e6;
+  --color-danger: #b42318;
+  --color-danger-soft: #fdeceb;
+  --color-sale: #c2361b;
+  --color-sale-soft: #fff1ed;
+  --color-rating: #f2a20c;
+
+  /* Shape and depth */
+  --radius-card: 0.875rem;
+  --radius-control: 0.625rem;
+  --shadow-card: 0 1px 2px rgb(19 32 31 / 0.06), 0 1px 3px rgb(19 32 31 / 0.08);
+  --shadow-raised: 0 8px 24px rgb(19 32 31 / 0.12), 0 2px 6px rgb(19 32 31 / 0.08);
+
+  /* Motion (disabled by prefers-reduced-motion below) */
+  --animate-fade-in: fade-in 160ms ease-out;
+  --animate-pop-in: pop-in 180ms ease-out;
+  --animate-slide-in-left: slide-in-left 220ms ease-out;
+  --animate-slide-in-right: slide-in-right 220ms ease-out;
+  --animate-slide-in-bottom: slide-in-bottom 220ms ease-out;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+    }
+  }
+  @keyframes slide-in-left {
+    from {
+      transform: translateX(-100%);
+    }
+  }
+  @keyframes slide-in-right {
+    from {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes slide-in-bottom {
+    from {
+      transform: translateY(100%);
+    }
+  }
+}
+
+/* Font family comes from next/font (CSS variable set on <html>). */
+@theme inline {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    color: var(--color-ink);
+    background-color: var(--color-canvas);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    min-height: 100dvh;
+    background-color: var(--color-canvas);
+  }
+
+  /* Visible keyboard focus everywhere (accessibility foundation, arch §18). */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-600);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
