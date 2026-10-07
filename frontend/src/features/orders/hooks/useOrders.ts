@@ -40,6 +40,8 @@ export function useCancelOrder() {
       queryClient.setQueryData(queryKeys.order(userId, order.orderId), order);
       void queryClient.invalidateQueries({ queryKey: queryKeys.orders(userId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.inventory() });
+      // Live stock for product pages and pickers (http mode reads it from the API).
+      void queryClient.invalidateQueries({ queryKey: ["product"] });
       toast.success(`Order ${order.orderId} has been cancelled.`);
     },
     onError: (error) => toast.error(getErrorMessage(error)),

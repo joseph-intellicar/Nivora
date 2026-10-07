@@ -1,0 +1,42 @@
+await import("./browser-shim.mjs");
+const { isSafeInternalPath, paths } = await import("@/config/routes");
+const { resumeIntent, intentReturnPath, intentReason } = await import("@/features/auth/intent");
+const { useLoginPromptStore, useAuthFlowStore } = await import("@/stores/loginPromptStore");
+const { api } = await import("@/api/client");
+const { QueryClient } = await import("@tanstack/react-query");
+let fail = 0; const ok = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); if (!c) fail++; };
+// TASK-029: redirect sanitiser
+const unsafe = ["https://evil.example", "//evil.example", "/\\evil.example", "javascript:alert(1)", "evil", "", null, "/ok\n//evil"];
+ok(unsafe.every(v => !isSafeInternalPath(v)), "unsafe from values rejected: absolute URL, //, /\\, javascript:, relative, empty, control chars");
+ok(["/account", "/checkout", "/p/apple-iphone-15?x=1", "/c/fashion/men"].every(isSafeInternalPath), "internal paths accepted");
+ok(paths.login("https://evil.example") === "/login" && paths.login("/account/orders") === "/login?from=%2Faccount%2Forders", "paths.login only adds safe from values");
+// TASK-030: prompt store lifecycle
+const s = () => useLoginPromptStore.getState();
+s().open({ type: "navigate", to: "/wishlist" }); ok(s().isOpen && s().intent?.type === "navigate", "open → dialog visible with intent");
+s().cancel(); ok(!s().isOpen && s().intent === null, "Cancel closes and discards the intent");
+s().open({ type: "checkout", returnTo: "/cart" }); s().proceed(); ok(!s().isOpen && s().intent?.type === "checkout", "Login closes the dialog but keeps the intent");
+ok(s().take()?.type === "checkout" && s().intent === null, "take() returns and clears the intent");
+ok(intentReturnPath({ type: "wishlist-add", productId: "p", returnTo: "/c/fashion" }) === "/c/fashion" && intentReason({ type: "buy-now", variantId: "v", quantity: 1, returnTo: "/" }) === "Log in to buy this item.", "return paths and dialog reasons");
+// resumeIntent with fake router/notify over the real mock data layer
+const qc = new QueryClient(); let nav = []; let notes = [];
+const deps = { api, queryClient: qc, navigate: p => nav.push(p), notify: { success: m => notes.push("✓ " + m), error: m => notes.push("✗ " + m), info: m => notes.push("i " + m) } };
+const reset = () => { nav = []; notes = []; };
+await api.auth.login({ email: "joseph@example.com", password: "password123" });
+const ctx = { userId: "user-joseph", mergedSavedItems: false, from: "/somewhere" };
+await resumeIntent(null, ctx, deps); ok(nav[0] === "/somewhere", "no intent → back to `from`");
+reset(); await resumeIntent(null, { ...ctx, from: "https://evil.example" }, deps); ok(nav[0] === "/", "no intent + unsafe from → Home");
+reset(); await resumeIntent({ type: "wishlist-add", productId: "apple-iphone-15", returnTo: "/c/mobiles" }, ctx, deps);
+ok(nav[0] === "/c/mobiles" && notes[0] === "✓ Added to your wishlist." && (await api.wishlist.getWishlist()).some(p => p.id === "apple-iphone-15"), "wishlist-add → added, toast, back to the originating listing");
+reset(); await resumeIntent({ type: "buy-now", variantId: "apple-iphone-15-blue-6-gb-256-gb", quantity: 1, returnTo: "/p/apple-iphone-15" }, ctx, deps);
+const co = await api.checkout.getCheckout("standard");
+ok(nav[0] === "/checkout" && co.source === "buy_now" && co.lines[0].variantId === "apple-iphone-15-blue-6-gb-256-gb", "buy-now → pending Buy Now stored, go to /checkout");
+reset(); await resumeIntent({ type: "buy-now", variantId: "realme-narzo-70-pro-5g-glass-green-8-gb-128-gb", quantity: 1, returnTo: "/p/realme-narzo-70-pro-5g" }, ctx, deps);
+ok(nav[0] === "/p/realme-narzo-70-pro-5g" && notes[0].startsWith("✗ ") && notes[0].includes("out of stock"), `re-validated after login: out-of-stock Buy Now → error toast "${notes[0]}" and back to the product`);
+reset(); await resumeIntent({ type: "checkout", returnTo: "/cart" }, ctx, deps);
+ok(nav[0] === "/checkout" && (await api.checkout.getCheckout("standard")).source === "cart", "checkout (nothing merged) → cart checkout started, /checkout");
+reset(); await resumeIntent({ type: "checkout", returnTo: "/cart" }, { ...ctx, mergedSavedItems: true }, deps);
+ok(nav[0] === "/cart?merged=1" && notes.length === 0, "checkout with merged saved items → /cart?merged=1 (the Cart page shows the D12 notice)");
+reset(); await resumeIntent({ type: "navigate", to: "/wishlist" }, ctx, deps); ok(nav[0] === "/wishlist", "navigate (header wishlist) → /wishlist");
+reset(); await resumeIntent({ type: "navigate", to: "https://evil.example" }, ctx, deps); ok(nav[0] === "/somewhere", "navigate to an unsafe target → falls back to from");
+useAuthFlowStore.getState().setLeaving(true); ok(useAuthFlowStore.getState().leaving, "logout 'leaving' flag (guards skip redirect while logging out)");
+console.log(fail ? `${fail} FAILED` : "ALL PASS");

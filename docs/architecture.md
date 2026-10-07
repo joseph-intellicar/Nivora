@@ -1,11 +1,11 @@
 # Nivora — Frontend Architecture (Phase 1)
 
-| | |
-|---|---|
-| **Scope** | Phase 1: the customer-facing frontend in `frontend/`, using mock data and localStorage |
+|                  |                                                                                           |
+| ---------------- | ----------------------------------------------------------------------------------------- |
+| **Scope**        | Phase 1: the customer-facing frontend in `frontend/`, using mock data and localStorage    |
 | **Requirements** | [`../requirements.md`](../requirements.md); section references like "req §17" point there |
-| **Status** | Agreed stack (§2) |
-| **Last updated** | 2026-10-06 |
+| **Status**       | Agreed stack (§2)                                                                         |
+| **Last updated** | 2026-10-06                                                                                |
 
 This document describes how the Phase 1 frontend is built: technologies, rendering strategy, SEO, layers, folder structure, data layer, routing, state management, styling and the main flows. The backend technology and database are **not** covered and remain undecided until Phase 2.
 
@@ -43,7 +43,7 @@ This document describes how the Phase 1 frontend is built: technologies, renderi
 
 1. **SEO-ready by design.** Public shopping pages (Home, categories, collections, products, info pages) are rendered on the server with complete HTML and metadata (§3, §10).
 2. **The UI never touches storage.** Components and hooks call a typed data layer. Only the mock adapter's storage module may use `localStorage` (req §5.1).
-3. **One contract, swappable implementations.** The data layer is defined as TypeScript interfaces. Phase 1 implements them with *mock adapters*; Phase 2 adds *HTTP adapters* that call the real backend. Pages and components do not change.
+3. **One contract, swappable implementations.** The data layer is defined as TypeScript interfaces. Phase 1 implements them with _mock adapters_; Phase 2 adds _HTTP adapters_ that call the real backend. Pages and components do not change.
 4. **The mock adapter behaves like a server.** It is asynchronous, validates its inputs, enforces business rules (stock, auth, ownership), returns computed totals, and fails with typed error codes.
 5. **Business rules live in pure domain functions**: pricing, stock, cart merging, filtering, search and order building. They are not in components.
 6. **The URL is the source of truth** for what the user is viewing: category, subcategory, query, filters, sort and page.
@@ -54,30 +54,30 @@ This document describes how the Phase 1 frontend is built: technologies, renderi
 
 ### 2.1 Agreed
 
-| Concern | Choice | Why |
-|---|---|---|
-| Framework | **Next.js** (App Router) | Server rendering for SEO and fast first paint; file-based routing, layouts, metadata API, image optimisation, fonts |
-| UI library | **React** (the version bundled with Next.js) | Specified in the requirements |
-| Language | **TypeScript** (strict) | Typed models and an explicit data-layer contract make the Phase 2 swap safe |
-| Styling | **Tailwind CSS** | Utility classes driven by Nivora design tokens (§17) |
-| Browser-side data | **TanStack Query** | Caching, loading/error states and mutations for user data (cart, wishlist, orders, …) |
-| Client UI state | **Zustand** | Toasts, login prompt + pending intent, variant picker (§11) |
-| Forms | **React Hook Form** | Forms with field-level errors |
-| Validation | **Zod** | Form and data-layer input schemas; reusable by the backend later |
-| Linting / formatting | **ESLint** (Next.js config + TypeScript rules) + **Prettier** | Code quality; enforces the storage and server/client boundaries (§20) |
-| Package manager | **npm** (with Node.js LTS) | Ships with Node.js; `package-lock.json` is committed |
+| Concern              | Choice                                                        | Why                                                                                                                 |
+| -------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Framework            | **Next.js** (App Router)                                      | Server rendering for SEO and fast first paint; file-based routing, layouts, metadata API, image optimisation, fonts |
+| UI library           | **React** (the version bundled with Next.js)                  | Specified in the requirements                                                                                       |
+| Language             | **TypeScript** (strict)                                       | Typed models and an explicit data-layer contract make the Phase 2 swap safe                                         |
+| Styling              | **Tailwind CSS**                                              | Utility classes driven by Nivora design tokens (§17)                                                                |
+| Browser-side data    | **TanStack Query**                                            | Caching, loading/error states and mutations for user data (cart, wishlist, orders, …)                               |
+| Client UI state      | **Zustand**                                                   | Toasts, login prompt + pending intent, variant picker (§11)                                                         |
+| Forms                | **React Hook Form**                                           | Forms with field-level errors                                                                                       |
+| Validation           | **Zod**                                                       | Form and data-layer input schemas; reusable by the backend later                                                    |
+| Linting / formatting | **ESLint** (Next.js config + TypeScript rules) + **Prettier** | Code quality; enforces the storage and server/client boundaries (§20)                                               |
+| Package manager      | **npm** (with Node.js LTS)                                    | Ships with Node.js; `package-lock.json` is committed                                                                |
 
 Built-in Next.js features used, with no extra packages: `next/link`, `next/navigation`, `next/image`, `next/font`, the Metadata API, `sitemap.ts` / `robots.ts`, and `loading.tsx` / `error.tsx` / `not-found.tsx`.
 
 ### 2.2 Not adopted in Phase 1
 
-| Item | Consequence |
-|---|---|
-| React Router | Not needed. Next.js provides routing |
-| Headless UI library (e.g. Radix UI) | Dialogs, drawers, dropdowns and toasts are built in-house, with their own accessibility work (§18) |
-| Icon library | In-house SVG icon components (§17.4) |
-| Test frameworks | No automated tests yet; verified manually against req §34 (§23) |
-| UI kits (MUI etc.), CSS-in-JS, Redux | Not needed |
+| Item                                 | Consequence                                                                                        |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| React Router                         | Not needed. Next.js provides routing                                                               |
+| Headless UI library (e.g. Radix UI)  | Dialogs, drawers, dropdowns and toasts are built in-house, with their own accessibility work (§18) |
+| Icon library                         | In-house SVG icon components (§17.4)                                                               |
+| Test frameworks                      | No automated tests yet; verified manually against req §34 (§23)                                    |
+| UI kits (MUI etc.), CSS-in-JS, Redux | Not needed                                                                                         |
 
 Exact versions are pinned in `frontend/package.json` at scaffold time, using the latest stable release of each.
 
@@ -85,14 +85,14 @@ Exact versions are pinned in `frontend/package.json` at scaffold time, using the
 
 In Phase 1, the **product catalog** is static data in code, so the server can render it. **Customer data** (session, cart, wishlist, addresses, orders, stock adjustments) lives in the browser's localStorage, so only the browser can read it. This decides where each part of the app renders:
 
-| Area | Rendered | How |
-|---|---|---|
-| Home, category, subcategory, collection pages | **Server** | Server Components read the catalog; the HTML contains the products |
-| Product Details | **Server**, pre-generated at build time (`generateStaticParams` for every product) | Product content is in the HTML; the purchase panel is a client component |
-| Search results | **Server**, rendered per request | Reads `searchParams` |
-| Info pages (About, Help, …) | **Server**, static | |
-| Header search, nav menus, filters UI, wishlist/cart buttons, variant selectors, quantity, gallery | **Browser** (client components) | Interactive "islands" inside server-rendered pages |
-| Cart, Wishlist, Checkout, Order Confirmation, Account, Login, Signup | **Browser** | Their data is in localStorage. The page shell is server-rendered; the content loads on the client |
+| Area                                                                                              | Rendered                                                                           | How                                                                                               |
+| ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Home, category, subcategory, collection pages                                                     | **Server**                                                                         | Server Components read the catalog; the HTML contains the products                                |
+| Product Details                                                                                   | **Server**, pre-generated at build time (`generateStaticParams` for every product) | Product content is in the HTML; the purchase panel is a client component                          |
+| Search results                                                                                    | **Server**, rendered per request                                                   | Reads `searchParams`                                                                              |
+| Info pages (About, Help, …)                                                                       | **Server**, static                                                                 |                                                                                                   |
+| Header search, nav menus, filters UI, wishlist/cart buttons, variant selectors, quantity, gallery | **Browser** (client components)                                                    | Interactive "islands" inside server-rendered pages                                                |
+| Cart, Wishlist, Checkout, Order Confirmation, Account, Login, Signup                              | **Browser**                                                                        | Their data is in localStorage. The page shell is server-rendered; the content loads on the client |
 
 Rules:
 
@@ -137,14 +137,14 @@ Known Phase 1 limitation: after a customer buys the last unit of something, a se
 
 **Import rules** (enforced by lint and convention, §20):
 
-| Area | May import | Must not import |
-|---|---|---|
-| `app/**` route files | `features`, `components`, `api/server`, `domain` types, `config`, `lib` | `api/client`, `api/*/mock`, `data`, `stores` directly |
-| `features/**` server components | `api/server`, `components`, `domain`, `config`, `lib` | `api/client`, `stores`, browser APIs |
-| `features/**` client components & hooks | `api/client`, `stores`, `components`, `domain`, `config`, `lib` | `api/server`, `api/*/mock`, `data` |
-| `api/*/mock` | `domain`, `data`, `config`, `lib` | React, Next.js, `features` |
-| `domain` | `config`, `lib` | React, Next.js, `api`, `features` |
-| `components` (shared UI) | `lib`, `hooks` | `features`, `api` |
+| Area                                    | May import                                                              | Must not import                                       |
+| --------------------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------- |
+| `app/**` route files                    | `features`, `components`, `api/server`, `domain` types, `config`, `lib` | `api/client`, `api/*/mock`, `data`, `stores` directly |
+| `features/**` server components         | `api/server`, `components`, `domain`, `config`, `lib`                   | `api/client`, `stores`, browser APIs                  |
+| `features/**` client components & hooks | `api/client`, `stores`, `components`, `domain`, `config`, `lib`         | `api/server`, `api/*/mock`, `data`                    |
+| `api/*/mock`                            | `domain`, `data`, `config`, `lib`                                       | React, Next.js, `features`                            |
+| `domain`                                | `config`, `lib`                                                         | React, Next.js, `api`, `features`                     |
+| `components` (shared UI)                | `lib`, `hooks`                                                          | `features`, `api`                                     |
 
 ## 5. Folder structure
 
@@ -285,6 +285,7 @@ frontend/
 ```
 
 **Where new code goes**:
+
 - Rendering for a business feature goes in `features/<feature>`.
 - Reusable UI with no business knowledge goes in `components/`.
 - Rules about products, money, stock or orders go in `domain/`.
@@ -296,45 +297,93 @@ frontend/
 Core types in `src/domain/types.ts` (abridged):
 
 ```ts
-type CategoryId = 'fashion' | 'home-appliances' | 'beauty' | 'toys' | 'mobiles';
+type CategoryId = "fashion" | "home-appliances" | "beauty" | "toys" | "mobiles";
 
-interface Category    { id: CategoryId; name: string; description: string; subcategories: Subcategory[] }
-interface Subcategory { id: string; categoryId: CategoryId; name: string; slug: string }
+interface Category {
+  id: CategoryId;
+  name: string;
+  description: string;
+  subcategories: Subcategory[];
+}
+interface Subcategory {
+  id: string;
+  categoryId: CategoryId;
+  name: string;
+  slug: string;
+}
 
 interface Product {
-  id: string; slug: string; name: string; brand: string;
-  categoryId: CategoryId; subcategoryId: string;
-  description: string; images: string[];                  // external stock-photo URLs (D2)
-  rating: number; reviewCount: number;
+  id: string;
+  slug: string;
+  name: string;
+  brand: string;
+  categoryId: CategoryId;
+  subcategoryId: string;
+  description: string;
+  images: string[]; // external stock-photo URLs (D2)
+  rating: number;
+  reviewCount: number;
   specifications: { label: string; value: string }[];
-  options: ProductOption[];                                // [] if none
-  variants: Variant[];                                     // always ≥ 1
-  attributes: Record<string, string | string[]>;           // capacity, energyRating, ageGroup, …
+  options: ProductOption[]; // [] if none
+  variants: Variant[]; // always ≥ 1
+  attributes: Record<string, string | string[]>; // capacity, energyRating, ageGroup, …
   tags: string[];
-  isBestSeller: boolean; isNewArrival: boolean; createdAt: string;
+  isBestSeller: boolean;
+  isNewArrival: boolean;
+  createdAt: string;
 }
-interface ProductOption { name: string; values: string[] }   // 'Color' | 'Size' | 'RAM' | 'Storage' | …
+interface ProductOption {
+  name: string;
+  values: string[];
+} // 'Color' | 'Size' | 'RAM' | 'Storage' | …
 interface Variant {
-  id: string;                                              // stable, e.g. "p123-blk-l"
-  optionValues: Record<string, string>;                    // {} for the default variant
-  price: number; originalPrice: number;                    // whole rupees
+  id: string; // stable, e.g. "p123-blk-l"
+  optionValues: Record<string, string>; // {} for the default variant
+  price: number;
+  originalPrice: number; // whole rupees
   initialStock: number;
 }
 
-interface CartLine { variantId: string; productId: string; quantity: number }
-interface Address  { id: string; fullName: string; phone: string; line1: string; line2?: string;
-                     city: string; state: string; postalCode: string; country: 'India'; isDefault: boolean }
-interface User     { id: string; name: string; email: string; phone?: string }
-type OrderStatus = 'Placed' | 'Confirmed' | 'Shipped' | 'Delivered' | 'Cancelled';
+interface CartLine {
+  variantId: string;
+  productId: string;
+  quantity: number;
+}
+interface Address {
+  id: string;
+  fullName: string;
+  phone: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: "India";
+  isDefault: boolean;
+}
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+}
+type OrderStatus = "Placed" | "Confirmed" | "Shipped" | "Delivered" | "Cancelled";
 interface Order {
-  orderId: string; customerId: string; orderDate: string; source: 'cart' | 'buy_now';
-  items: OrderItem[];                                      // snapshots
-  subtotal: number; discount: number;
-  deliveryOption: 'standard' | 'express'; deliveryCharge: number; total: number;
-  deliveryAddress: Omit<Address, 'id' | 'isDefault'>;
-  paymentMethod: 'Cash on Delivery';
-  status: OrderStatus; statusHistory: { status: OrderStatus; at: string }[];
-  isSample?: boolean;                                      // seeded orders never touch stock (req §25.5)
+  orderId: string;
+  customerId: string;
+  orderDate: string;
+  source: "cart" | "buy_now";
+  items: OrderItem[]; // snapshots
+  subtotal: number;
+  discount: number;
+  deliveryOption: "standard" | "express";
+  deliveryCharge: number;
+  total: number;
+  deliveryAddress: Omit<Address, "id" | "isDefault">;
+  paymentMethod: "Cash on Delivery";
+  status: OrderStatus;
+  statusHistory: { status: OrderStatus; at: string }[];
+  isSample?: boolean; // seeded orders never touch stock (req §25.5)
 }
 ```
 
@@ -355,14 +404,16 @@ All methods return Promises. Customer-data methods resolve the current user from
 // ── Server side: catalog (no customer data) ─────────────────────────
 interface CatalogApi {
   getCategories(): Promise<Category[]>;
-  listProducts(query: ProductQuery): Promise<ProductListResult>;   // items, total, facets, paging
+  listProducts(query: ProductQuery): Promise<ProductListResult>; // items, total, facets, paging
   getProduct(slug: string): Promise<Product | null>;
   getCollection(id: CollectionId, limit?: number): Promise<ProductSummary[]>;
-  getAllProductSlugs(): Promise<string[]>;                         // generateStaticParams, sitemap
+  getAllProductSlugs(): Promise<string[]>; // generateStaticParams, sitemap
 }
 
 // ── Client side: customer data ──────────────────────────────────────
-interface InventoryApi { getAdjustments(): Promise<Record<string, number>> }   // §3.1
+interface InventoryApi {
+  getAdjustments(): Promise<Record<string, number>>;
+} // §3.1
 interface AuthApi {
   getSession(): Promise<User | null>;
   login(input: LoginInput): Promise<{ user: User; mergedSavedItems: boolean }>;
@@ -370,7 +421,7 @@ interface AuthApi {
   logout(): Promise<void>;
 }
 interface CartApi {
-  getCart(): Promise<CartView>;                     // resolved lines, issues, PriceSummary
+  getCart(): Promise<CartView>; // resolved lines, issues, PriceSummary
   addItem(input: { variantId: string; quantity: number }): Promise<CartView>;
   updateQuantity(variantId: string, quantity: number): Promise<CartView>;
   removeItem(variantId: string): Promise<CartView>;
@@ -391,15 +442,18 @@ interface AddressApi {
 interface CheckoutApi {
   startBuyNow(input: { variantId: string; quantity: number }): Promise<void>;
   startCartCheckout(): Promise<void>;
-  getCheckout(deliveryOption: DeliveryOption): Promise<CheckoutView>;   // source, items, issues, summary
+  getCheckout(deliveryOption: DeliveryOption): Promise<CheckoutView>; // source, items, issues, summary
   placeOrder(input: { addressId: string; deliveryOption: DeliveryOption }): Promise<Order>;
 }
 interface OrderApi {
   list(): Promise<OrderSummary[]>;
-  get(orderId: string): Promise<Order>;             // NOT_FOUND if not the user's
+  get(orderId: string): Promise<Order>; // NOT_FOUND if not the user's
   cancel(orderId: string): Promise<Order>;
 }
-interface ProfileApi { get(): Promise<User>; update(input: ProfileInput): Promise<User> }
+interface ProfileApi {
+  get(): Promise<User>;
+  update(input: ProfileInput): Promise<User>;
+}
 ```
 
 - `src/api/server/index.ts` exports `catalog`. `src/api/client/index.ts` exports `api` (`api.cart`, `api.auth`, …).
@@ -442,18 +496,18 @@ type ApiErrorCode =
 - parses JSON safely, falling back to defaults on corrupt data (req §5.2);
 - converts storage exceptions (quota exceeded, private mode) into `ApiError('UNKNOWN')`.
 
-| Key (`nivora:v1:…`) | Shape | Notes |
-|---|---|---|
-| `users` | `StoredUser[]` (incl. mock password; profile name/phone live here) | Test user seeded (req §7.1, §5.3 caveat) |
-| `auth_session` | `{ userId, createdAt } \| null` | Absent on first launch, so the user starts logged out |
-| `cart` | `{ guest: CartLine[]; byUser: Record<userId, CartLine[]> }` | req §17.5 |
-| `wishlist` | `Record<userId, string[]>` | Product IDs, no duplicates |
-| `addresses` | `Record<userId, Address[]>` | |
-| `orders` | `Order[]` | Filtered by `customerId` on read |
-| `order_counter` | `number` | `NIV-2026-000123` style IDs |
-| `inventory` | `Record<variantId, number>` | Stock adjustments (§3.1) |
-| `checkout_session` | `Record<userId, { source; buyNow?: { variantId; quantity } }>` | Pending Buy Now (req §19) |
-| `seed_version` | `number` | Seeding runs once per seed version |
+| Key (`nivora:v1:…`) | Shape                                                              | Notes                                                 |
+| ------------------- | ------------------------------------------------------------------ | ----------------------------------------------------- |
+| `users`             | `StoredUser[]` (incl. mock password; profile name/phone live here) | Test user seeded (req §7.1, §5.3 caveat)              |
+| `auth_session`      | `{ userId, createdAt } \| null`                                    | Absent on first launch, so the user starts logged out |
+| `cart`              | `{ guest: CartLine[]; byUser: Record<userId, CartLine[]> }`        | req §17.5                                             |
+| `wishlist`          | `Record<userId, string[]>`                                         | Product IDs, no duplicates                            |
+| `addresses`         | `Record<userId, Address[]>`                                        |                                                       |
+| `orders`            | `Order[]`                                                          | Filtered by `customerId` on read                      |
+| `order_counter`     | `number`                                                           | `NIV-2026-000123` style IDs                           |
+| `inventory`         | `Record<variantId, number>`                                        | Stock adjustments (§3.1)                              |
+| `checkout_session`  | `Record<userId, { source; buyNow?: { variantId; quantity } }>`     | Pending Buy Now (req §19)                             |
+| `seed_version`      | `number`                                                           | Seeding runs once per seed version                    |
 
 - **Seeding** runs once, on the first client data-layer call (`ensureSeeded()`). It adds the test user and their sample orders (`isSample: true`), and never creates a session.
 - **Logout** removes only `auth_session` and that user's `checkout_session` (req §27).
@@ -470,22 +524,22 @@ type ApiErrorCode =
 
 ### 9.2 Route table
 
-| Path | File | Rendering | Access | Index in search engines |
-|---|---|---|---|---|
-| `/` | `(shop)/page.tsx` | Server (static, revalidated) | Everyone | Yes |
-| `/c/[category]` | `(shop)/c/[category]/page.tsx` | Server (per request: uses `searchParams`) | Everyone | Yes (unfiltered) |
-| `/c/[category]/[subcategory]` | `…/[subcategory]/page.tsx` | Server | Everyone | Yes (unfiltered) |
-| `/collections/[collection]` | `(shop)/collections/[collection]/page.tsx` | Server | Everyone | Yes |
-| `/search?q=…` | `(shop)/search/page.tsx` | Server (per request) | Everyone | **No** |
-| `/p/[slug]` | `(shop)/p/[slug]/page.tsx` | Server, pre-built (`generateStaticParams`) | Everyone | Yes |
-| `/cart` | `(shop)/cart/page.tsx` | Browser content | Everyone | No |
-| `/login`, `/signup` | `(shop)/login`, `(shop)/signup` | Browser content | Guests only | No |
-| `/wishlist` | `(shop)/wishlist/page.tsx` | Browser content | Logged in | No |
-| `/account`, `/account/orders`, `/account/orders/[orderId]`, `/account/addresses` | `(shop)/account/**` | Browser content | Logged in | No |
-| `/checkout` | `(checkout)/checkout/page.tsx` | Browser content | Logged in | No |
-| `/order-confirmation/[orderId]` | `(checkout)/order-confirmation/[orderId]/page.tsx` | Browser content | Logged in, own order | No |
-| `/about`, `/contact`, `/help`, `/returns`, `/privacy`, `/terms` | `(shop)/(info)/[page]/page.tsx` | Server (static) | Everyone | Yes |
-| unknown | `app/not-found.tsx` | Server | Everyone | No |
+| Path                                                                             | File                                               | Rendering                                  | Access               | Index in search engines |
+| -------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------ | -------------------- | ----------------------- |
+| `/`                                                                              | `(shop)/page.tsx`                                  | Server (static, revalidated)               | Everyone             | Yes                     |
+| `/c/[category]`                                                                  | `(shop)/c/[category]/page.tsx`                     | Server (per request: uses `searchParams`)  | Everyone             | Yes (unfiltered)        |
+| `/c/[category]/[subcategory]`                                                    | `…/[subcategory]/page.tsx`                         | Server                                     | Everyone             | Yes (unfiltered)        |
+| `/collections/[collection]`                                                      | `(shop)/collections/[collection]/page.tsx`         | Server                                     | Everyone             | Yes                     |
+| `/search?q=…`                                                                    | `(shop)/search/page.tsx`                           | Server (per request)                       | Everyone             | **No**                  |
+| `/p/[slug]`                                                                      | `(shop)/p/[slug]/page.tsx`                         | Server, pre-built (`generateStaticParams`) | Everyone             | Yes                     |
+| `/cart`                                                                          | `(shop)/cart/page.tsx`                             | Browser content                            | Everyone             | No                      |
+| `/login`, `/signup`                                                              | `(shop)/login`, `(shop)/signup`                    | Browser content                            | Guests only          | No                      |
+| `/wishlist`                                                                      | `(shop)/wishlist/page.tsx`                         | Browser content                            | Logged in            | No                      |
+| `/account`, `/account/orders`, `/account/orders/[orderId]`, `/account/addresses` | `(shop)/account/**`                                | Browser content                            | Logged in            | No                      |
+| `/checkout`                                                                      | `(checkout)/checkout/page.tsx`                     | Browser content                            | Logged in            | No                      |
+| `/order-confirmation/[orderId]`                                                  | `(checkout)/order-confirmation/[orderId]/page.tsx` | Browser content                            | Logged in, own order | No                      |
+| `/about`, `/contact`, `/help`, `/returns`, `/privacy`, `/terms`                  | `(shop)/(info)/[page]/page.tsx`                    | Server (static)                            | Everyone             | Yes                     |
+| unknown                                                                          | `app/not-found.tsx`                                | Server                                     | Everyone             | No                      |
 
 Unknown category, subcategory, collection or product slugs call `notFound()`, which renders the Nivora 404 page with the correct 404 status.
 
@@ -519,14 +573,14 @@ On listing pages, `page.tsx` receives `searchParams`. These are parsed by `featu
 - The root layout sets defaults: `metadataBase` (`NEXT_PUBLIC_SITE_URL`), a title template of `%s | Nivora` with default `Nivora — Online Shopping`, a description, and default Open Graph/Twitter images (`/og/nivora-default.png`).
 - Each public page exports `generateMetadata`:
 
-| Page | Title | Description | Open Graph image | Canonical |
-|---|---|---|---|---|
-| Home | `Nivora — Online Shopping` | Brand/promo copy | Default | `/` |
-| Category | `Fashion` | Category description | Default or category image | `/c/fashion` (filters stripped) |
-| Subcategory | `Men's Fashion` | Generated from category + subcategory | Default | `/c/fashion/men` |
-| Collection | `Best Sellers` | Collection blurb | Default | `/collections/best-sellers` |
-| Product | `<Product name>` | First ~155 chars of description | First product image | `/p/<slug>` |
-| Info pages | `About Nivora`, … | Page summary | Default | Own path |
+| Page        | Title                      | Description                           | Open Graph image          | Canonical                       |
+| ----------- | -------------------------- | ------------------------------------- | ------------------------- | ------------------------------- |
+| Home        | `Nivora — Online Shopping` | Brand/promo copy                      | Default                   | `/`                             |
+| Category    | `Fashion`                  | Category description                  | Default or category image | `/c/fashion` (filters stripped) |
+| Subcategory | `Men's Fashion`            | Generated from category + subcategory | Default                   | `/c/fashion/men`                |
+| Collection  | `Best Sellers`             | Collection blurb                      | Default                   | `/collections/best-sellers`     |
+| Product     | `<Product name>`           | First ~155 chars of description       | First product image       | `/p/<slug>`                     |
+| Info pages  | `About Nivora`, …          | Page summary                          | Default                   | Own path                        |
 
 - Private and utility pages (cart, checkout, account, wishlist, login, signup, order confirmation, search) set `robots: { index: false }`.
 
@@ -534,11 +588,11 @@ On listing pages, `page.tsx` receives `searchParams`. These are parsed by `featu
 
 Rendered by a small `JsonLd` server component (`features/seo`):
 
-| Page | Schema.org types |
-|---|---|
-| Home | `Organization`, `WebSite` (with `SearchAction` → `/search?q={query}`) |
-| Category / subcategory / collection | `BreadcrumbList`, `ItemList` of products |
-| Product | `Product` (name, images, brand, description, SKU = variant ID, `aggregateRating`, `offers` with `priceCurrency: INR`, price range across variants, `availability`), `BreadcrumbList` |
+| Page                                | Schema.org types                                                                                                                                                                     |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Home                                | `Organization`, `WebSite` (with `SearchAction` → `/search?q={query}`)                                                                                                                |
+| Category / subcategory / collection | `BreadcrumbList`, `ItemList` of products                                                                                                                                             |
+| Product                             | `Product` (name, images, brand, description, SKU = variant ID, `aggregateRating`, `offers` with `priceCurrency: INR`, price range across variants, `availability`), `BreadcrumbList` |
 
 The JSON-LD `availability` uses initial stock in Phase 1 (§3.1).
 
@@ -560,29 +614,29 @@ The JSON-LD `availability` uses initial stock in Phase 1 (§3.1).
 
 ## 11. State management
 
-| Kind of state | Owner | Examples |
-|---|---|---|
-| **Catalog data** | **Server Components** (fetched in `page.tsx`) | categories, listings, product details, collections |
-| **What the user is viewing** | **URL** (path + `searchParams`) | category, subcategory, `q`, filters, sort, page |
-| **Customer data** (localStorage in Phase 1) | **TanStack Query** (browser) | session, cart, wishlist, addresses, checkout, orders, profile, inventory adjustments |
-| **Global UI state** | **Zustand** | toasts, login-required dialog + pending intent, variant picker |
-| **Form state** | **React Hook Form** | login, signup, address, profile |
-| **Local component state** | `useState` | selected variant, quantity, gallery index, mobile menu open |
+| Kind of state                               | Owner                                         | Examples                                                                             |
+| ------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------ |
+| **Catalog data**                            | **Server Components** (fetched in `page.tsx`) | categories, listings, product details, collections                                   |
+| **What the user is viewing**                | **URL** (path + `searchParams`)               | category, subcategory, `q`, filters, sort, page                                      |
+| **Customer data** (localStorage in Phase 1) | **TanStack Query** (browser)                  | session, cart, wishlist, addresses, checkout, orders, profile, inventory adjustments |
+| **Global UI state**                         | **Zustand**                                   | toasts, login-required dialog + pending intent, variant picker                       |
+| **Form state**                              | **React Hook Form**                           | login, signup, address, profile                                                      |
+| **Local component state**                   | `useState`                                    | selected variant, quantity, gallery index, mobile menu open                          |
 
 ### 11.1 TanStack Query
 
 - `Providers.tsx` creates one `QueryClient` per browser session (with `useState`, so it's never shared between server requests).
 - Query keys (central `queryKeys` object):
 
-| Key | Data | Notes |
-|---|---|---|
-| `['session']` | `User \| null` | `staleTime: Infinity`; set by login/signup/logout/profile update |
-| `['inventory']` | adjustments map | Invalidated after place order / cancel |
-| `['cart', userId ?? 'guest']` | `CartView` | |
-| `['wishlist', userId]` | `ProductSummary[]` | Enabled only when logged in |
-| `['addresses', userId]` | `Address[]` | |
-| `['checkout', userId, deliveryOption]` | `CheckoutView` | |
-| `['orders', userId]`, `['order', userId, orderId]` | | |
+| Key                                                | Data               | Notes                                                            |
+| -------------------------------------------------- | ------------------ | ---------------------------------------------------------------- |
+| `['session']`                                      | `User \| null`     | `staleTime: Infinity`; set by login/signup/logout/profile update |
+| `['inventory']`                                    | adjustments map    | Invalidated after place order / cancel                           |
+| `['cart', userId ?? 'guest']`                      | `CartView`         |                                                                  |
+| `['wishlist', userId]`                             | `ProductSummary[]` | Enabled only when logged in                                      |
+| `['addresses', userId]`                            | `Address[]`        |                                                                  |
+| `['checkout', userId, deliveryOption]`             | `CheckoutView`     |                                                                  |
+| `['orders', userId]`, `['order', userId, orderId]` |                    |                                                                  |
 
 - **Mutations** update or invalidate affected keys. Add to Cart writes the returned `CartView` into the cache. Place Order invalidates cart, checkout, orders and inventory.
 - **Wishlist toggle** is optimistic, with rollback on error.
@@ -615,10 +669,10 @@ Filter and sort controls are client components. They update the URL with `router
 
 ```ts
 type PendingIntent =
-  | { type: 'wishlist-add'; productId: string }
-  | { type: 'buy-now'; variantId: string; quantity: number }
-  | { type: 'checkout' }
-  | { type: 'navigate' };            // header wishlist icon, protected page
+  | { type: "wishlist-add"; productId: string }
+  | { type: "buy-now"; variantId: string; quantity: number }
+  | { type: "checkout" }
+  | { type: "navigate" }; // header wishlist icon, protected page
 ```
 
 `useRequireAuth()` returns `requireAuth(intent, run)`:
@@ -633,12 +687,12 @@ requireAuth(intent, run):
 
 After successful login or signup, `resumeIntent()`:
 
-| Intent | Then |
-|---|---|
-| `wishlist-add` | `api.wishlist.add` → toast → back to `from` |
-| `buy-now` | `api.checkout.startBuyNow` (re-validated) → `/checkout` |
-| `checkout` | `mergedSavedItems` ? `/cart` with notice : `startCartCheckout()` → `/checkout` (D12) |
-| `navigate` / none | `from` or `/` |
+| Intent            | Then                                                                                 |
+| ----------------- | ------------------------------------------------------------------------------------ |
+| `wishlist-add`    | `api.wishlist.add` → toast → back to `from`                                          |
+| `buy-now`         | `api.checkout.startBuyNow` (re-validated) → `/checkout`                              |
+| `checkout`        | `mergedSavedItems` ? `/cart` with notice : `startCartCheckout()` → `/checkout` (D12) |
+| `navigate` / none | `from` or `/`                                                                        |
 
 - The intent is kept in memory (Zustand), so it survives switching between `/login` and `/signup`. Both pages forward `from`.
 - Leaving the auth pages any other way clears the intent (req §6.1).
@@ -679,13 +733,13 @@ Filtering, sorting, search scoring, facets and pagination all happen in the cata
 
 ### 13.2 Filter configuration (`features/catalog/filterConfig.ts`)
 
-| Context | Filters |
-|---|---|
-| Fashion | Subcategory nav, Size, Color, Brand, Price, Rating, Discount, Availability |
-| Mobiles | Subcategory nav, Brand, RAM, Storage, Price, Rating, Discount, Availability |
-| Home Appliances | Subcategory nav, Brand, Capacity, Energy Rating, Price, Rating, Discount, Availability |
-| Beauty | Subcategory nav, Brand, Product Type, Skin/Hair Type, Price, Rating, Discount, Availability |
-| Toys | Subcategory nav, Brand, Age Group, Price, Rating, Discount, Availability |
+| Context              | Filters                                                                                                                                |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Fashion              | Subcategory nav, Size, Color, Brand, Price, Rating, Discount, Availability                                                             |
+| Mobiles              | Subcategory nav, Brand, RAM, Storage, Price, Rating, Discount, Availability                                                            |
+| Home Appliances      | Subcategory nav, Brand, Capacity, Energy Rating, Price, Rating, Discount, Availability                                                 |
+| Beauty               | Subcategory nav, Brand, Product Type, Skin/Hair Type, Price, Rating, Discount, Availability                                            |
+| Toys                 | Subcategory nav, Brand, Age Group, Price, Rating, Discount, Availability                                                               |
 | Search / collections | Category, Subcategory, Brand, Price, Rating, Discount, Availability (+ category-specific filters when results are within one category) |
 
 Facet options come from the current result set (req §12.2).
@@ -793,15 +847,15 @@ usePlaceOrder → api.checkout.placeOrder({ addressId, deliveryOption })
 
 ## 16. Error handling
 
-| Layer | Mechanism |
-|---|---|
-| Data layer | Throws `ApiError` with a code (§7.3) |
-| Messages | `lib/errorMessages.ts` maps codes (+ `details`) to the customer wording in req §28 |
+| Layer                  | Mechanism                                                                                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Data layer             | Throws `ApiError` with a code (§7.3)                                                                                                              |
+| Messages               | `lib/errorMessages.ts` maps codes (+ `details`) to the customer wording in req §28                                                                |
 | Server-rendered routes | `error.tsx` per route group shows a friendly "Something went wrong" with Retry (`reset()`) and a link home. `global-error.tsx` is the last resort |
-| Not found | `notFound()` → `not-found.tsx` (404 status) |
-| Client queries | `ErrorState` with **Try again** (refetch) |
-| Mutations | Toast for actions; inline/form errors for forms and checkout |
-| Unexpected exceptions | Never shown to customers. Details are logged to the console in development only |
+| Not found              | `notFound()` → `not-found.tsx` (404 status)                                                                                                       |
+| Client queries         | `ErrorState` with **Try again** (refetch)                                                                                                         |
+| Mutations              | Toast for actions; inline/form errors for forms and checkout                                                                                      |
+| Unexpected exceptions  | Never shown to customers. Details are logged to the console in development only                                                                   |
 
 ## 17. UI system, styling and responsiveness
 
@@ -818,6 +872,7 @@ usePlaceOrder → api.checkout.placeOrder({ addressId, deliveryOption })
 Button (primary, secondary, ghost, danger; loading/disabled) · IconButton · Input · Select · Checkbox · Radio · Dialog · Drawer · Dropdown · Toaster · Badge · Rating · Price · Skeleton · Spinner · EmptyState · ErrorState · Breadcrumbs · ProductImage. (Screen-reader-only text uses Tailwind's `sr-only` class directly.)
 
 `ProductImage` wraps `next/image`:
+
 - `remotePatterns` in `next.config.ts` allow the stock-photo host (D2);
 - `sizes` are set per layout, so the right image size is served;
 - `priority` is used for above-the-fold images (hero, main product image);
@@ -825,12 +880,12 @@ Button (primary, secondary, ghost, danger; loading/disabled) · IconButton · In
 
 ### 17.3 Responsive layout
 
-| Breakpoint | Width | Grid columns | Navigation | Filters |
-|---|---|---|---|---|
-| default | < 640px | 2 | Hamburger → `MobileMenu` drawer (categories, subcategories, account) | "Filter" / "Sort" buttons → `FilterDrawer`, Apply button showing the result count |
-| `sm`/`md` | 640–1023px | 3 | Hamburger / compact | Drawer |
-| `lg` | 1024–1279px | 4 | Horizontal `MainNav` + subcategory dropdowns | Sidebar |
-| `xl` | ≥ 1280px | 5 | Horizontal | Sidebar |
+| Breakpoint | Width       | Grid columns | Navigation                                                           | Filters                                                                           |
+| ---------- | ----------- | ------------ | -------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| default    | < 640px     | 2            | Hamburger → `MobileMenu` drawer (categories, subcategories, account) | "Filter" / "Sort" buttons → `FilterDrawer`, Apply button showing the result count |
+| `sm`/`md`  | 640–1023px  | 3            | Hamburger / compact                                                  | Drawer                                                                            |
+| `lg`       | 1024–1279px | 4            | Horizontal `MainNav` + subcategory dropdowns                         | Sidebar                                                                           |
+| `xl`       | ≥ 1280px    | 5            | Horizontal                                                           | Sidebar                                                                           |
 
 - On mobile:
   - The header shows the logo, a full-width search row, wishlist, cart and menu.
@@ -884,39 +939,39 @@ The in-house overlays and controls must provide:
 
 ## 21. Phase 2 migration path
 
-| Phase 1 | Phase 2 | UI impact |
-|---|---|---|
-| `api/server/mock/catalog.ts` | HTTP catalog adapter calling the backend from Server Components (with Next.js caching/revalidation) | None |
-| `api/client/mock/*` (localStorage) | HTTP adapters calling the backend with a session cookie | None |
-| Session in localStorage; client-side guards | HTTP-only cookie session; `proxy.ts` (formerly middleware) protects routes on the server; user data can then also be server-rendered | Guards simplified |
-| Inventory overlay (§3.1) | Removed. The server renders real stock | Overlay hook becomes a no-op, then is deleted |
-| `domain/*` rules used by mocks | The backend is authoritative; the frontend keeps display helpers and form checks | None |
-| Zod schemas | May move to a shared package used by frontend and backend | Import paths only |
-| `ApiError` codes | HTTP adapters map backend errors to the same codes | None |
-| `src/data` mock catalog | Becomes database seed data; removed from the frontend | None |
-| `NEXT_PUBLIC_ALLOW_INDEXING=false` | Set to `true` at public launch | None |
+| Phase 1                                     | Phase 2                                                                                                                              | UI impact                                     |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- |
+| `api/server/mock/catalog.ts`                | HTTP catalog adapter calling the backend from Server Components (with Next.js caching/revalidation)                                  | None                                          |
+| `api/client/mock/*` (localStorage)          | HTTP adapters calling the backend with a session cookie                                                                              | None                                          |
+| Session in localStorage; client-side guards | HTTP-only cookie session; `proxy.ts` (formerly middleware) protects routes on the server; user data can then also be server-rendered | Guards simplified                             |
+| Inventory overlay (§3.1)                    | Removed. The server renders real stock                                                                                               | Overlay hook becomes a no-op, then is deleted |
+| `domain/*` rules used by mocks              | The backend is authoritative; the frontend keeps display helpers and form checks                                                     | None                                          |
+| Zod schemas                                 | May move to a shared package used by frontend and backend                                                                            | Import paths only                             |
+| `ApiError` codes                            | HTTP adapters map backend errors to the same codes                                                                                   | None                                          |
+| `src/data` mock catalog                     | Becomes database seed data; removed from the frontend                                                                                | None                                          |
+| `NEXT_PUBLIC_ALLOW_INDEXING=false`          | Set to `true` at public launch                                                                                                       | None                                          |
 
 Next.js remains the frontend. The backend lives in `backend/`: **NestJS + Prisma + Neon PostgreSQL**, designed in [`backend-architecture.md`](backend-architecture.md). Phase 2 decisions that refine this table: shared domain/validation/data move to an npm-workspace package `@nivora/shared`; sessions are database-backed HTTP-only cookies; guest carts live on the server behind an anonymous cookie.
 
 ## 22. Implementation plan
 
-| # | Milestone | Delivers |
-|---|---|---|
-| M1 | Scaffold and design foundation | Next.js + TS + Tailwind + ESLint/Prettier; design tokens, fonts, Nivora logo/palette; UI kit basics; root layout, `(shop)`/`(checkout)` layouts with Header/Footer/MainNav/MobileMenu; every route stubbed; 404/error pages; base metadata |
-| M2 | Data layer and mock data | Domain types and rules; server catalog adapter; client mock adapters + storage + seed + inventory; the full product dataset across all 24 subcategories; seeded orders |
-| M3 | Catalog and SEO | Home, category/subcategory/collection pages, filters (config-driven, URL-synced), sorting, pagination, search, product card + inventory overlay, empty states; `generateMetadata`, JSON-LD, sitemap, robots |
-| M4 | Product Details and Cart | Pre-built product pages, gallery, variants, quantity, stock states, Add to Cart, variant picker, Cart page and totals, header count |
-| M5 | Authentication | Login, Signup, session, guards, login-required dialog, pending intents, cart merge, logout |
-| M6 | Wishlist | Optimistic toggle, Wishlist page, Move to Cart |
-| M7 | Checkout and orders | Addresses, delivery options, COD, Buy Now, place order, stock updates, confirmation, Orders/Order Details, cancellation |
-| M8 | Account and info pages | Profile, Account layout, footer info pages |
-| M9 | Polish and verification | Responsive, accessibility and state audits; SEO check (view-source HTML, metadata, structured data); walkthrough of every req §32 flow and §34 criterion |
+| #   | Milestone                      | Delivers                                                                                                                                                                                                                                   |
+| --- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| M1  | Scaffold and design foundation | Next.js + TS + Tailwind + ESLint/Prettier; design tokens, fonts, Nivora logo/palette; UI kit basics; root layout, `(shop)`/`(checkout)` layouts with Header/Footer/MainNav/MobileMenu; every route stubbed; 404/error pages; base metadata |
+| M2  | Data layer and mock data       | Domain types and rules; server catalog adapter; client mock adapters + storage + seed + inventory; the full product dataset across all 24 subcategories; seeded orders                                                                     |
+| M3  | Catalog and SEO                | Home, category/subcategory/collection pages, filters (config-driven, URL-synced), sorting, pagination, search, product card + inventory overlay, empty states; `generateMetadata`, JSON-LD, sitemap, robots                                |
+| M4  | Product Details and Cart       | Pre-built product pages, gallery, variants, quantity, stock states, Add to Cart, variant picker, Cart page and totals, header count                                                                                                        |
+| M5  | Authentication                 | Login, Signup, session, guards, login-required dialog, pending intents, cart merge, logout                                                                                                                                                 |
+| M6  | Wishlist                       | Optimistic toggle, Wishlist page, Move to Cart                                                                                                                                                                                             |
+| M7  | Checkout and orders            | Addresses, delivery options, COD, Buy Now, place order, stock updates, confirmation, Orders/Order Details, cancellation                                                                                                                    |
+| M8  | Account and info pages         | Profile, Account layout, footer info pages                                                                                                                                                                                                 |
+| M9  | Polish and verification        | Responsive, accessibility and state audits; SEO check (view-source HTML, metadata, structured data); walkthrough of every req §32 flow and §34 criterion                                                                                   |
 
 ## 23. Open items
 
-| Item | Status |
-|---|---|
-| Automated testing | Not adopted in Phase 1; manual verification against req §34. Recommend revisiting (e.g. unit tests for `domain/`) before Phase 2 |
-| Nivora visual identity (palette, typography, logo) | Designed in M1 |
-| Hosting/deployment | Not decided. Next.js needs a Node.js server or a platform that supports it (e.g. Vercel); decide before any public deployment |
-| Stock-photo host for `next/image` `remotePatterns` | Set in M2, when the dataset's image URLs are chosen |
+| Item                                               | Status                                                                                                                           |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Automated testing                                  | Not adopted in Phase 1; manual verification against req §34. Recommend revisiting (e.g. unit tests for `domain/`) before Phase 2 |
+| Nivora visual identity (palette, typography, logo) | Designed in M1                                                                                                                   |
+| Hosting/deployment                                 | Not decided. Next.js needs a Node.js server or a platform that supports it (e.g. Vercel); decide before any public deployment    |
+| Stock-photo host for `next/image` `remotePatterns` | Set in M2, when the dataset's image URLs are chosen                                                                              |

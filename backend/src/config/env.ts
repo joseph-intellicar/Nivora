@@ -17,21 +17,27 @@ const postgresUrl = z
     "must be a postgresql:// URL",
   );
 
-export const envSchema = z.object({
-  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-  PORT: z.coerce.number().int().min(1).max(65535).default(4000),
-  DATABASE_URL: postgresUrl,
-  DIRECT_URL: postgresUrl,
-  FRONTEND_ORIGIN: z
-    .url({ error: "must be an origin such as http://localhost:3000" })
-    .refine(
-      (value) => new URL(value).origin === value.replace(/\/$/, ""),
-      "must be an origin with no path",
-    )
-    .transform((value) => value.replace(/\/$/, "")),
-  COOKIE_SECURE: booleanString.default(false),
-  SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(30),
-});
+export const envSchema = z
+  .object({
+    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    PORT: z.coerce.number().int().min(1).max(65535).default(4000),
+    DATABASE_URL: postgresUrl,
+    DIRECT_URL: postgresUrl,
+    FRONTEND_ORIGIN: z
+      .url({ error: "must be an origin such as http://localhost:3000" })
+      .refine(
+        (value) => new URL(value).origin === value.replace(/\/$/, ""),
+        "must be an origin with no path",
+      )
+      .transform((value) => value.replace(/\/$/, "")),
+    COOKIE_SECURE: booleanString.default(false),
+    SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(30),
+  })
+  .refine((env) => env.NODE_ENV !== "production" || env.COOKIE_SECURE, {
+    // Session cookies must never travel over plain HTTP in production (barch §8, §13).
+    path: ["COOKIE_SECURE"],
+    message: "must be true when NODE_ENV=production",
+  });
 
 export type Env = z.infer<typeof envSchema>;
 

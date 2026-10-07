@@ -2,7 +2,7 @@ import { Controller, Get, HttpCode, HttpStatus, Logger, Res } from "@nestjs/comm
 import type { Response } from "express";
 import { PrismaService } from "../../prisma/prisma.service.js";
 
-export type HealthStatus = { status: "ok" | "degraded"; db: "ok" | "down" };
+export type HealthStatus = { status: "ok" | "degraded"; db: "ok" | "down"; dbLatencyMs?: number };
 
 /** Liveness + database check for the host and for operators (barch §19). */
 @Controller("health")
@@ -16,8 +16,9 @@ export class HealthController {
   async check(@Res({ passthrough: true }) res: Response): Promise<HealthStatus> {
     res.setHeader("Cache-Control", "no-store");
     try {
+      const started = performance.now();
       await this.prisma.$queryRaw`SELECT 1`;
-      return { status: "ok", db: "ok" };
+      return { status: "ok", db: "ok", dbLatencyMs: Math.round(performance.now() - started) };
     } catch (error) {
       const code = (error as { code?: unknown }).code;
       this.logger.warn(

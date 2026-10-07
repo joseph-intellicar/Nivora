@@ -23,6 +23,7 @@ import {
   stockFor,
   type Selection,
 } from "@nivora/shared/domain/variantSelection";
+import { useLiveProduct } from "../hooks/useLiveProduct";
 import { QuantitySelector } from "./QuantitySelector";
 import { DeliveryInfo } from "./DeliveryInfo";
 import { StockStatus } from "./StockStatus";
@@ -32,7 +33,8 @@ import { VariantSelector } from "./VariantSelector";
  * Product Details purchase controls (requirements §16–§19): variants, quantity, live stock,
  * Add to Cart, Buy Now and Wishlist. Server-rendered with initial stock, then live.
  */
-export function PurchasePanel({ product }: { product: Product }) {
+export function PurchasePanel({ product: rendered }: { product: Product }) {
+  const product = useLiveProduct(rendered);
   const { data: adjustments = {} } = useInventory();
   const { data: cart } = useCart();
   const addToCart = useAddToCart();

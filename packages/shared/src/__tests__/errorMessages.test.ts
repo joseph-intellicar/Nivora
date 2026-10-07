@@ -1,6 +1,6 @@
 import { addressSchema, loginSchema, signupSchema } from "../domain/validation";
 import { getErrorMessage, messageFor } from "../errorMessages";
-import { API_ERROR_CODES, ApiError, isApiErrorCode } from "../errors";
+import { API_ERROR_CODES, ApiError, fromErrorEnvelope, isApiErrorCode } from "../errors";
 import { fieldErrors, validate } from "../validate";
 
 const address = {
@@ -128,5 +128,49 @@ describe("validate (field errors for forms)", () => {
   it("puts whole-object errors under 'form'", () => {
     const result = loginSchema.safeParse("not an object");
     expect(Object.keys(fieldErrors(result.error!))).toEqual(["form"]);
+  });
+});
+
+describe("fromErrorEnvelope (API error envelope → ApiError)", () => {
+  it("keeps the code and details", () => {
+    const error = fromErrorEnvelope({
+      error: {
+        code: "INSUFFICIENT_STOCK",
+        message: "Only 2 left in stock.",
+        details: { available: 2, productName: "X" },
+      },
+    });
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error.code).toBe("INSUFFICIENT_STOCK");
+    expect(error.details).toEqual({ available: 2, productName: "X" });
+    expect(getErrorMessage(error)).toBe(
+      "Only 2 units of X are available. Please update the quantity.",
+    );
+  });
+
+  it("keeps field errors for forms", () => {
+    const error = fromErrorEnvelope({
+      error: {
+        code: "INVALID_ADDRESS",
+        details: { fields: { postalCode: "Please enter a valid 6-digit PIN code." } },
+      },
+    });
+    expect(error.details.fields).toEqual({ postalCode: "Please enter a valid 6-digit PIN code." });
+  });
+
+  it.each([
+    undefined,
+    null,
+    "<html>502</html>",
+    {},
+    { error: {} },
+    { error: { code: "TEAPOT" } },
+    { message: "x" },
+  ])("turns %p into UNKNOWN", (payload) => {
+    expect(fromErrorEnvelope(payload).code).toBe("UNKNOWN");
+  });
+
+  it("ignores malformed details", () => {
+    expect(fromErrorEnvelope({ error: { code: "NOT_FOUND", details: ["x"] } }).details).toEqual({});
   });
 });

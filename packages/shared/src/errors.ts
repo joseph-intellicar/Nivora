@@ -55,3 +55,18 @@ export function isApiError(error: unknown): error is ApiError {
 export function isApiErrorCode(value: unknown): value is ApiErrorCode {
   return typeof value === "string" && (API_ERROR_CODES as readonly string[]).includes(value);
 }
+
+/**
+ * The API's error envelope `{ error: { code, message, details } }` → ApiError (barch §7).
+ * Anything else (HTML error page, unknown code, empty body) becomes UNKNOWN.
+ */
+export function fromErrorEnvelope(payload: unknown): ApiError {
+  const error = (payload as { error?: { code?: unknown; details?: unknown } } | null | undefined)
+    ?.error;
+  if (!error || !isApiErrorCode(error.code)) return new ApiError("UNKNOWN");
+  const details =
+    error.details && typeof error.details === "object" && !Array.isArray(error.details)
+      ? (error.details as ApiErrorDetails)
+      : {};
+  return new ApiError(error.code, details);
+}

@@ -52,7 +52,7 @@ Same workflow as Phase 1 (see [`tasks.md`](tasks.md)):
 
 ### Progress
 
-**28 / 39 tasks done.**
+**39 / 39 tasks done** (👤 Joseph's walkthrough and sign-off pending).
 
 ---
 
@@ -403,7 +403,7 @@ Same workflow as Phase 1 (see [`tasks.md`](tasks.md)):
 
 ## Stage P8 — Frontend integration
 
-- [ ] **P2-029 — HTTP client foundation and same-origin proxy**
+- [x] **P2-029 — HTTP client foundation and same-origin proxy**
   - **Goal:** The frontend can call the API with cookies.
   - **Depends on:** P2-028
   - **Requirements:** barch §13, §17; arch §21
@@ -413,9 +413,9 @@ Same workflow as Phase 1 (see [`tasks.md`](tasks.md)):
   - **Acceptance criteria:** a test call from the browser reaches the API with cookies; mock mode unaffected.
   - **Verification:**
     - 🤖 `curl localhost:3000/api/health` proxies to the backend; Jest/unit test of the envelope → `ApiError` mapping.
-  - **Verification log:** —
+  - **Verification log:** Claude: ✅ 2026-10-07 — `NEXT_PUBLIC_DATA_SOURCE=mock|http` (`siteConfig.dataSource`), `BACKEND_URL` (server-only; `.env`/`.env.example` documented). `next.config.ts` rewrites `/api/:path*` → `${BACKEND_URL}/api/v1/:path*` (baked in at build). `src/api/http/client.ts`: `apiFetch` (browser → same-origin `/api`, server → `BACKEND_URL` directly; `credentials: "include"`; JSON; 204 → undefined; network failure → `ApiError("UNKNOWN")`; error envelope → `ApiError` via the new shared `fromErrorEnvelope`), `orNull` (NOT_FOUND → null for contract methods that return null), `newIdempotencyKey`. Adapter selection in `api/client/index.ts` and `api/server/index.ts`. **Checks:** shared Jest 127/127 (+10 `fromErrorEnvelope`: code/details kept, field errors kept, 7 malformed payloads → UNKNOWN, array details ignored); frontend typecheck/lint clean; backend on the `nivora_test` schema (port 4100) + frontend built in `http` mode (`next start` on 3100): `/api/health` through the proxy → `{status:"ok",db:"ok"}`; login as joseph@example.com through the proxy → 200 + `nivora_session` cookie stored in the jar, `/api/auth/session` with that cookie → Joseph, logout 204; a cross-origin POST through the proxy → 403 `FORBIDDEN` (Origin forwarded); unknown product → 404 envelope. Mock mode unaffected: mock build + all Phase 1 suites pass. **Note:** the Phase 1 verification scripts were lost when the session scratchpad was cleared; they were recovered from the session transcript into the repo at `scripts/verify/` (paths made relative, later fixes re-applied) and re-validated: 16 node suites + check-035/039/040/057/stage7-11/guard, a11y and crawl all pass on a mock build.
 
-- [ ] **P2-030 — Server catalog HTTP adapter**
+- [x] **P2-030 — Server catalog HTTP adapter**
   - **Goal:** Server Components read the catalog from the API.
   - **Depends on:** P2-029
   - **Requirements:** barch §10, §17; arch §3, §10
@@ -423,9 +423,9 @@ Same workflow as Phase 1 (see [`tasks.md`](tasks.md)):
   - **Acceptance criteria:** all catalog pages render server-side from the API with unchanged HTML structure and SEO.
   - **Verification:**
     - 🤖 Phase 1 HTTP suites (categories, product, SEO) pass in `http` mode; build pre-renders all 154 products from the API.
-  - **Verification log:** —
+  - **Verification log:** Claude: ✅ 2026-10-07 — `src/api/http/server.ts`: `httpCatalog` (`/categories`, `/products?<toApiSearch>`, `/products/:slug` → `Product` (live `available` dropped; purchase UI re-reads stock in the browser), `/collections/:id?limit`, `/products/slugs`) and `httpContent` (`/content/pages/:slug`), NOT_FOUND → null/[] as the contract expects; Next data cache: taxonomy/slugs 1 h, listings 60 s, products 5 min, content 1 h (tags `catalog`/`stock`/`content`). `next build` in `http` mode against the API (backend on `nivora_test`): 20 s, all 154 product pages pre-rendered from `/products/slugs` + `/products/:slug`. **Found & fixed:** `next start` read `BACKEND_URL` from `frontend/.env` (port 4000) while the build used 4100 → on-demand pages failed with a bare UNKNOWN; the server adapter now logs the cause ("Nivora API unreachable: … <url>") and the docs say build and start need the same `BACKEND_URL`. **Checks (`http` mode):** check-035 (categories/404s), check-040 (product details), check-057 (discovery), check-039 off **and** on (separate `NEXT_PUBLIC_ALLOW_INDEXING=true` build; sitemap 193 URLs from the API), check-stage7-11, protected-route guard, a11y — ALL PASS; crawl: 209 URLs all 200, no broken links, 154/154 products reachable from Home.
 
-- [ ] **P2-031 — Client HTTP adapters**
+- [x] **P2-031 — Client HTTP adapters**
   - **Goal:** Customer features use the API.
   - **Depends on:** P2-030
   - **Requirements:** barch §17; arch §7.1
@@ -433,9 +433,9 @@ Same workflow as Phase 1 (see [`tasks.md`](tasks.md)):
   - **Acceptance criteria:** every UI flow works against the backend with no component changes.
   - **Verification:**
     - 🤖 The Phase 1 journeys script re-pointed at the HTTP adapters (Node, with a cookie jar) passes end to end.
-  - **Verification log:** —
+  - **Verification log:** Claude: ✅ 2026-10-07 — `src/api/http/browser.ts` (`httpApi: ClientApi`): catalog.getProduct (404 → null), auth (session/login/signup/logout), cart, wishlist, addresses, checkout, orders, profile — same contracts and TanStack Query keys, no component changes; `inventory.getAdjustments` → `{}` (no overlay in http mode). Place Order idempotency: one `Idempotency-Key` per attempt; concurrent calls (double click) share one request, a retry after a network failure reuses the key, any server answer ends the attempt. `scripts/verify/http-shim.mjs`: Node gets a browser-like fetch — same-origin `/api/...` through the **real Next.js proxy** (:3100), cookie jar from `Set-Cookie` (incl. clearing), browser Origin on mutations. `e2e-journeys.mjs` made mode-aware (stock via the API in http mode, unique signup email). **Checks** (fresh `nivora_test` seed, backend :4100, `http` build): journeys — all 6 journeys, 31 checks **ALL PASS** (guest cart, wishlist intent → login → merge, signup/login/logout, guarded features 401, Buy Now → login → checkout, addresses, COD order NIV-2026-000005, stock −1 via the API, cart checkout, history, cancel restores stock, sample not cancellable, profile); `check-stage3` (login intents, D12 merged landing, safe redirects) ALL PASS in http mode; both still ALL PASS in mock mode.
 
-- [ ] **P2-032 — Remove the Phase 1 inventory overlay in HTTP mode**
+- [x] **P2-032 — Remove the Phase 1 inventory overlay in HTTP mode**
   - **Goal:** One source of stock truth.
   - **Depends on:** P2-031
   - **Requirements:** arch §3.1, §21; barch §17
@@ -443,9 +443,9 @@ Same workflow as Phase 1 (see [`tasks.md`](tasks.md)):
   - **Acceptance criteria:** after an order, listings and product pages show the new stock (within the revalidation window for server pages, immediately for client islands).
   - **Verification:**
     - 🤖 Place an order through the API, then check the product page's live stock and a listing's "In stock only" result.
-  - **Verification log:** —
+  - **Verification log:** Claude: ✅ 2026-10-07 — In `http` mode the inventory adapter returns no adjustments, so `useInventory` is a no-op and every stock number comes from the API: server pages carry the stock at render time (listings cached 60 s, product pages 5 min) and the new `useLiveProduct` hook makes the PDP purchase panel read live stock from `/api/products/:slug` (mock mode: unchanged, overlay as before). Place Order and Cancel now also invalidate the `["product"]` queries. **Check** (http build, backend on `nivora_test`): PlayForge Dragon Guardian Figure (1 unit) listed under Action Figures "In stock only"; Joseph bought the last unit through the proxy (order NIV-2026-000007) → `/api/products/:slug` reports 0 immediately; a headless-Chrome screenshot of the cached product page shows **"Out of Stock"** with Add to Cart / Buy Now disabled (client island, immediate); the "In stock only" listing still showed it within its 60 s window and dropped it after the window (revalidated).
 
-- [ ] **P2-033 — Server-side route protection (`proxy.ts`)**
+- [x] **P2-033 — Server-side route protection (`proxy.ts`)**
   - **Goal:** Guests are redirected before protected pages render.
   - **Depends on:** P2-032
   - **Requirements:** arch §9.3, §21; req §6.1
@@ -453,9 +453,9 @@ Same workflow as Phase 1 (see [`tasks.md`](tasks.md)):
   - **Acceptance criteria:** guests get an HTTP redirect; logged-in users see pages normally.
   - **Verification:**
     - 🤖 `curl -I` protected routes without a cookie → 307 to `/login?from=…`; with a valid session cookie → 200.
-  - **Verification log:** —
+  - **Verification log:** Claude: ✅ 2026-10-07 — `frontend/src/proxy.ts` (Next 16 `proxy`, Node runtime): in `http` mode, no `nivora_session` cookie → 307 to `/login?from=<path+query>` for `/account`, `/account/*`, `/checkout`, `/wishlist`, `/order-confirmation/*` (matcher); presence-only check (no API call); an expired/bogus cookie still reaches the page where `RequireAuth` redirects in the browser; mock mode → passthrough (the data-source check is inlined and compiled away in http builds). New suite `scripts/verify/check-proxy.py`: 7 protected routes → 307 with the right `from` (query string kept), 7 public pages 200 for guests, login sets the cookie, protected pages 200 with it — **ALL PASS**; headless screenshot: guest → `/account/orders` lands on Login with "Please log in to continue.". **Tooling fix:** `serve.sh`/`api.sh` relied on `lsof` (silent here), so a leftover server could keep answering on :3100 while a new `start` failed — the first proxy check hit an old build. Both now refuse to start on a busy port and stop by killing the port's listener (`ss`).
 
-- [ ] **P2-034 — Full frontend regression in HTTP mode**
+- [x] **P2-034 — Full frontend regression in HTTP mode**
   - **Goal:** Phase 1 quality holds on the real backend.
   - **Depends on:** P2-033
   - **Requirements:** req §34
@@ -464,11 +464,11 @@ Same workflow as Phase 1 (see [`tasks.md`](tasks.md)):
   - **Verification:**
     - 🤖 HTTP suites, link crawl, accessibility audit, journeys, protected-route checks; headless screenshots of Home, listing, product, cart and checkout.
     - 👤 [`docs/manual-testing.md`](docs/manual-testing.md) §A–§E against the real backend.
-  - **Verification log:** —
+  - **Verification log:** Claude: ✅ 2026-10-07 — Clean state: backend rebuilt, `nivora_test` migrated (no pending) and reset + seeded (5/24/154/346/1/4), API restarted on :4100; frontend `rm -rf .next` + production build in `http` mode (21 routes, no warnings, 154 product pages pre-rendered from the API). **Results (`http` mode):** check-035 (categories, 404s), check-040 (product details), check-057 (discovery), check-039 SEO off, check-proxy (server-side protection), a11y audit — ALL PASS; crawl 209 URLs all 200, no broken links, 154/154 products reachable; journeys (31 checks) and check-stage3 (intents) through the HTTP adapters + Next proxy — ALL PASS; message/listing/variant suites (check-018/034/041) ALL PASS. The mock-mode skeleton checks (check-guard, check-stage7-11) are replaced in http mode by check-proxy, because guests are now redirected on the server before any HTML. **Screenshots** (`scripts/verify/shot-session.mjs`: headless Chrome over the DevTools protocol with the session cookie): Home, Men listing, Oxford shirt (guest); Cart and Checkout as Joseph (server cart 3 items ₹3,297, saved addresses, delivery options) at 1280 px and checkout at 375 px — all match Phase 1. 👤 Joseph's browser walkthrough (§A–§E) against the real backend is still open.
 
 ## Stage P9 — Hardening, docs, sign-off
 
-- [ ] **P2-035 — Security review**
+- [x] **P2-035 — Security review**
   - **Goal:** No obvious holes before anything goes public.
   - **Depends on:** P2-034
   - **Requirements:** barch §13; req §5.3, §23
@@ -476,9 +476,9 @@ Same workflow as Phase 1 (see [`tasks.md`](tasks.md)):
   - **Acceptance criteria:** findings fixed or explicitly accepted.
   - **Verification:**
     - 🤖 e2e: another user's address/order/wishlist inaccessible; cross-origin mutation rejected; stack traces never returned; `npm audit` summary; logs contain no passwords/tokens/phones.
-  - **Verification log:** —
+  - **Verification log:** Claude: ✅ 2026-10-07 — **Reviewed:** cookies (HttpOnly, SameSite=Lax, Secure per env, hashed tokens, new token per login), CSRF (Origin/Referer + JSON-only on every mutating route), rate limits (per IP + per-email lock), ownership (every customer query scoped by the session user), error leakage (global filter), log content, dependencies. **Fixed:** (1) the API now refuses to start with `NODE_ENV=production` unless `COOKIE_SECURE=true` (+ unit test); (2) frontend sends `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (camera/mic/geo/payment off) and no `X-Powered-By` (verified with `curl -I`). **New e2e `security` (15/15):** an intruder customer gets 404 on the owner's address (edit/delete/default) and order (read/cancel), can't place an order to the owner's address (`ADDRESS_REQUIRED`), and wishlist/cart deletes only touch their own lists — the owner's data is unchanged; 12 mutating routes from another origin → 403 `FORBIDDEN`; malformed/hostile inputs (bad URL encoding, huge page, NoSQL-style object, SQL text, broken JSON, path traversal) never return stack traces, file paths, Prisma or SQL text; session cookie flags checked; captured logs from signup/login/address/failed login contain no session token, password, phone or email. Backend unit 45/45. **`npm audit`:** 0 critical; dev tooling only (eslint-config-next → braces/micromatch); production tree: 4 high, all inside the **Prisma CLI** (`@prisma/config` → `deepmerge-ts` 7, `mysql2` for MySQL Studio) — not loaded by the running API; npm's fix is a downgrade to Prisma 6 and `overrides` broke the CLI (reverted). **Accepted (recorded in barch §21):** those CLI advisories until a Prisma 7.x patch; the IP rate limit trusts one proxy hop (the API must stay behind the Next proxy/host load balancer — the per-email login lock still applies); in-memory limits per instance; signup reveals that an email exists (req §28 wording); no CSP on the frontend yet (Next inline scripts need nonces); **rotate the Neon password before going public** (it was shared in chat).
 
-- [ ] **P2-036 — Cleanup jobs and observability**
+- [x] **P2-036 — Cleanup jobs and observability**
   - **Goal:** The database stays tidy; problems are visible.
   - **Depends on:** P2-035
   - **Requirements:** barch §19
@@ -486,9 +486,9 @@ Same workflow as Phase 1 (see [`tasks.md`](tasks.md)):
   - **Acceptance criteria:** cleanup removes only expired data.
   - **Verification:**
     - 🤖 e2e with backdated rows: only expired sessions/carts removed.
-  - **Verification log:** —
+  - **Verification log:** Claude: ✅ 2026-10-07 — `MaintenanceModule` / `CleanupService`: deletes sessions with `expiresAt <= now` and guest carts (`userId` null) not updated for 30 days (items cascade); hourly `setInterval` (unref'd, first pass 30 s after start, failures logged as a warning) — no scheduler library added (`@nestjs/schedule` was not on the approved list); disabled under `NODE_ENV=test`, where tests call `run()`; customer carts, orders and accounts are never touched; idempotent, so safe with several instances. Observability: request-id'd one-line request logs (P2-009), JSON logger in production, `GET /health` now returns `dbLatencyMs`. e2e `cleanup` 1/1 with backdated rows: expired session removed, live session kept; guest cart idle 31 days removed with its items, 29 days kept; a customer cart idle 400 days kept; user kept; second run harmless. `health` e2e updated for `dbLatencyMs` (3/3).
 
-- [ ] **P2-037 — Performance check**
+- [x] **P2-037 — Performance check**
   - **Goal:** Fast enough on Neon.
   - **Depends on:** P2-036
   - **Requirements:** barch §10, §14
@@ -496,9 +496,9 @@ Same workflow as Phase 1 (see [`tasks.md`](tasks.md)):
   - **Acceptance criteria:** results recorded; no endpoint has an N+1 pattern.
   - **Verification:**
     - 🤖 Timing script (100 requests per endpoint) + Prisma query logging review.
-  - **Verification log:** —
+  - **Verification log:** Claude: ✅ 2026-10-07 — Tools: `PRISMA_LOG_QUERIES=1` (opt-in SQL log in `PrismaService`), `scripts/verify/query-count.sh` (statements per endpoint), `scripts/verify/perf.mjs` (p50/p95). **N+1 review:** statement counts are constant per endpoint (they don't grow with items/orders/wishlist size) — no N+1. **Round trips removed:** session lookup = 1 parameterised, schema-qualified JOIN (was session + user, runs on every customer request); cart view = items ⨝ variants in one JOIN; customer cart found-then-created instead of Prisma's multi-statement upsert; cart line writes = native `INSERT … ON CONFLICT` upsert / plain update/delete, in parallel with the cart's `updatedAt` touch; Place Order returns the order it built instead of re-reading it (`relationJoins` is still a Prisma 7.10 preview feature, so it was not enabled). Statements: session 2 → 1, GET /cart 5 → 3, POST /cart/items 15 → 7, POST /orders 17 → 14. **Timings** (from India to Neon us-east-2, `nivora_test`): health p50 292 / p95 377 ms; listing 304 / 449; product 298 / 419; session 291 / 445; cart 604 / 746; add to cart 1,522 / 1,763 (was ~4.7 s); checkout 922 / 1,061; orders 933 / 1,189; place order (incl. Buy Now call) 5,318 / 5,522. Model: latency ≈ sequential round trips × ~290 ms (API CPU time is negligible: `/health` = one `SELECT 1`). Indexes: every hot lookup is by primary/unique key or an indexed FK — none needed. **Region:** recorded in barch §21 — an Asia-region Neon project would bring every endpoint to roughly 10–100 ms; Place Order's 14 statements must stay sequential inside its transaction. All backend unit/e2e suites re-run after the changes.
 
-- [ ] **P2-038 — Documentation and runbook**
+- [x] **P2-038 — Documentation and runbook**
   - **Goal:** Anyone can run, migrate and seed the project.
   - **Depends on:** P2-037
   - **Requirements:** barch §15, §16
@@ -506,9 +506,9 @@ Same workflow as Phase 1 (see [`tasks.md`](tasks.md)):
   - **Acceptance criteria:** a fresh clone can be set up from the README alone.
   - **Verification:**
     - 🤖 Follow the README in a clean temporary checkout against the `nivora_test` schema (install → migrate → seed → run → health).
-  - **Verification log:** —
+  - **Verification log:** Claude: ✅ 2026-10-07 — Rewritten: root `README.md` (structure, status, quick start for mock and http mode, env, database, tests), `backend/README.md` (setup, every env var, scripts, test-schema guard, **API reference table**, error statuses, operations, troubleshooting), `frontend/README.md` (data sources, `BACKEND_URL`, data layer, proxy, boundaries), new `scripts/verify/README.md` (every suite and helper), `docs/README.md`; barch §17 "as built" and §21 final open items. Root scripts `db:migrate`/`db:seed`/`db:check`; `@nivora/shared` gained `prepare` (builds on `npm install`, needed by the backend on a fresh clone); `backend/.prettierignore` (generated client). **Clean checkout** (only committable files copied to a temp dir — no node_modules, .env, dist or generated code): `npm install` (23 s; shared built, Prisma client generated without any `.env`); mock-mode `next build` OK (21 routes), workspace typecheck + lint clean; `backend/.env` pointed at `nivora_test` → `npm run db:migrate` (no pending), `npm run db:seed`, `npm run db:check` ✓, `npm run build -w backend`, start → `GET /api/v1/health` `{status:"ok",db:"ok"}` and 154 slugs. Prettier clean on all docs.
 
-- [ ] **P2-039 — Phase 2 scope check and sign-off**
+- [x] **P2-039 — Phase 2 scope check and sign-off**
   - **Goal:** Confirm Phase 2 is complete and still within scope.
   - **Depends on:** P2-038
   - **Requirements:** req §35, §36
@@ -517,4 +517,21 @@ Same workflow as Phase 1 (see [`tasks.md`](tasks.md)):
   - **Verification:**
     - 🤖 Scope scan + verification map.
     - 👤 Joseph's sign-off.
-  - **Verification log:** —
+  - **Verification log:** Claude: ✅ 2026-10-07 — **Scope scan** (292 source files in frontend, backend, shared, Prisma): no payment gateway or card/UPI handling (only hit: the "Blue Stripe" shirt colour), no email/SMS/OTP libraries or flows, no admin/seller UI (hits: `isBestSeller`, a comment "no admin editing yet"), no shipping/courier integration; payment is Cash on Delivery only; runtime dependencies = the approved stack (frontend: next, react, TanStack Query, Zustand, RHF, Zod; backend: Nest, @nestjs/config, Prisma client + adapter-pg, argon2, cookie-parser, helmet, express (already Nest's HTTP platform), zod; shared: zod). **Final test run:** shared Jest 127/127, backend unit 45/45, backend e2e 19 suites / 165 tests — all pass; lint, typecheck, Prettier clean in every workspace.
+
+    **Verification map (barch feature → tasks → evidence):**
+
+    | Feature | Tasks | Evidence |
+    |---|---|---|
+    | Shared rules, contracts, data | P2-003 – P2-007 | shared Jest (127), mock-mode regression |
+    | Config, security headers, CSRF, rate limits, error envelope | P2-009, P2-010, P2-035 | unit + e2e `app`, `errors`, `security` |
+    | Prisma/Neon, schema, constraints, seed, test isolation | P2-011 – P2-014 | `health`, `harness`, psql checks, `db:check` |
+    | Catalog, listings (parity), product stock, content | P2-015 – P2-017, P2-030 | `catalog-metadata`, `catalog-listing` (42 pages), `product-details`, http-mode HTTP suites + crawl |
+    | Sessions, auth, profile | P2-018 – P2-020 | `session`, `auth`, `profile`; live login as Joseph |
+    | Carts, merge, wishlist | P2-021 – P2-023 | `cart` (guest + customer), `cart-merge`, `wishlist` |
+    | Addresses, checkout, orders, cancel | P2-024 – P2-027 | `addresses`, `checkout`, `orders` |
+    | Stock/money invariants under load | P2-028 | `concurrency` (5 rounds each) |
+    | Frontend on the API, one stock truth, server-side protection | P2-029 – P2-034 | journeys + intents through the Next proxy, sell-out check, `check-proxy`, screenshots |
+    | Cleanup, observability, performance, docs | P2-036 – P2-038 | `cleanup`, timing/query-count tools, clean-checkout run |
+
+    **Open items** (barch §21): rotate the Neon password before going public; move Neon to an Asia region (latency); choose hosting (API behind a proxy); frontend CSP; Prisma CLI advisories; shared rate-limit store when scaling out; order status progression stays out of scope. 👤 **Pending:** Joseph's browser walkthrough (docs/manual-testing.md §A–§E) in `http` mode and Phase 2 sign-off.

@@ -196,7 +196,7 @@ export class CheckoutService {
       address: checkedAddress.data,
     });
 
-    const row = await tx.order.create({
+    await tx.order.create({
       data: {
         orderNumber: order.orderId,
         customerId: userId,
@@ -214,7 +214,7 @@ export class CheckoutService {
         items: { create: order.items.map((item, position) => ({ ...item, position })) },
         history: { create: { status: "Placed", at: now } },
       },
-      include: ORDER_INCLUDE,
+      select: { id: true },
     });
 
     if (source === "cart") {
@@ -223,7 +223,8 @@ export class CheckoutService {
       });
     }
     await tx.checkoutSession.deleteMany({ where: { userId } });
-    return toOrder(row);
+    // The stored order is exactly what buildOrder produced; no need to read it back.
+    return order;
   }
 
   /** Which items this checkout is for: a valid pending Buy Now, otherwise the cart (req §19). */

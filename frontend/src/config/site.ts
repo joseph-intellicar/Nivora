@@ -5,7 +5,8 @@
  * with a literal `process.env.NEXT_PUBLIC_...` reference.
  */
 
-export type DataSource = "mock";
+/** "mock": Phase 1 browser storage; "http": the Nivora API (Phase 2). */
+export type DataSource = "mock" | "http";
 
 function parseLatency(value: string | undefined): number {
   const parsed = Number.parseInt(value ?? "", 10);
@@ -13,8 +14,7 @@ function parseLatency(value: string | undefined): number {
 }
 
 function parseDataSource(value: string | undefined): DataSource {
-  // Phase 1 only implements the mock data layer.
-  return value === "mock" ? value : "mock";
+  return value === "http" ? "http" : "mock";
 }
 
 function parseSiteUrl(value: string | undefined): string {

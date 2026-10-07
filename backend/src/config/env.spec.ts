@@ -65,6 +65,15 @@ describe("validateEnv (barch §15)", () => {
     expect(message.match(/^ {2}- DATABASE_URL/gm)).toHaveLength(1);
   });
 
+  it("requires Secure cookies in production", () => {
+    expect(() => validateEnv({ ...valid, NODE_ENV: "production" })).toThrow(
+      /COOKIE_SECURE: must be true when NODE_ENV=production/,
+    );
+    expect(
+      validateEnv({ ...valid, NODE_ENV: "production", COOKIE_SECURE: "true" }).COOKIE_SECURE,
+    ).toBe(true);
+  });
+
   it("never echoes values (connection strings contain passwords)", () => {
     try {
       validateEnv({ ...valid, DIRECT_URL: "postgres-ish://user:hunter2@host" });

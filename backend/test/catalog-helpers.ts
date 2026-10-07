@@ -1,5 +1,5 @@
 import { PRODUCTS } from "@nivora/shared/data/products";
-import type { StockAdjustments } from "@nivora/shared/domain/types";
+import type { Product, StockAdjustments } from "@nivora/shared/domain/types";
 import type { PrismaService } from "../src/prisma/prisma.service.js";
 
 const initial = new Map(PRODUCTS.flatMap((p) => p.variants.map((v) => [v.id, v.initialStock])));
@@ -33,4 +33,17 @@ export async function setStock(
     for (const row of before)
       await prisma.variant.update({ where: { id: row.id }, data: { stock: row.stock } });
   };
+}
+
+/**
+ * The shared catalog as the API serves it: each variant's `initialStock` is its CURRENT database
+ * stock (barch §10), so expected results come from the shared pipeline with no adjustments.
+ */
+export async function liveCatalog(prisma: PrismaService): Promise<Product[]> {
+  const rows = await prisma.variant.findMany({ select: { id: true, stock: true } });
+  const stock = new Map(rows.map((row) => [row.id, row.stock]));
+  return PRODUCTS.map((p) => ({
+    ...p,
+    variants: p.variants.map((v) => ({ ...v, initialStock: stock.get(v.id) ?? 0 })),
+  }));
 }

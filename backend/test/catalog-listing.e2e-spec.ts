@@ -13,7 +13,7 @@ import type { ProductListResult } from "@nivora/shared/domain/types";
 import request from "supertest";
 import { PrismaService } from "../src/prisma/prisma.service.js";
 import { createTestApp } from "./app-factory.js";
-import { liveAdjustments, setStock } from "./catalog-helpers.js";
+import { liveCatalog, setStock } from "./catalog-helpers.js";
 
 const taxonomy = createTaxonomy(CATEGORIES);
 const fashion: ListingContext = { categoryId: "fashion" };
@@ -73,12 +73,21 @@ describe("GET /api/v1/products parity with the Phase 1 pipeline (e2e, P2-016)", 
   const list = async (search: string): Promise<ProductListResult> =>
     (await request(app.getHttpServer()).get(`/api/v1/products?${search}`).expect(200)).body;
 
+  let restoreStock: () => Promise<void>;
+
   beforeAll(async () => {
     app = await createTestApp();
     prisma = app.get(PrismaService);
+    // Parity must hold on live stock, not only on a fresh seed: sell some units, sell one variant out.
+    restoreStock = await setStock(prisma, {
+      "urbano-classic-oxford-shirt-sky-blue-m": 23,
+      "northline-pique-polo-t-shirt-black-l": 1,
+      "apple-iphone-15-black-6-gb-128-gb": 0,
+    });
   });
 
   afterAll(async () => {
+    await restoreStock();
     await app.close();
   });
 
@@ -88,13 +97,7 @@ describe("GET /api/v1/products parity with the Phase 1 pipeline (e2e, P2-016)", 
 
   it.each(PAGES)("?%s %j matches queryCatalog exactly", async (search, context) => {
     const query = parseListingParams(new URLSearchParams(search), context);
-    const expected = queryCatalog(
-      PRODUCTS,
-      query,
-      taxonomy,
-      PAGE_SIZE,
-      await liveAdjustments(prisma),
-    );
+    const expected = queryCatalog(await liveCatalog(prisma), query, taxonomy, PAGE_SIZE);
     const actual = await list(toApiSearch(query));
     expect(actual).toEqual(expected);
   });

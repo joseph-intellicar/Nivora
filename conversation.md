@@ -1181,3 +1181,75 @@ Stage P6: server-side carts with a guest cookie, merge on login, and wishlist (P
 ### Next step
 
 Stage P8 (frontend integration), after Joseph confirms.
+
+---
+
+## Session 2 (2026-10-07): Stage P8 — Frontend integration (P2-029 to P2-034)
+
+Joseph asked to implement Stages P8 and P9. The Stage P0–P7 work had already been committed and pushed as `881268c make backend service`.
+
+- **Lost tooling, recovered:**
+  - The Phase 1 verification scripts lived in the session scratchpad and were wiped between sessions.
+  - They were recovered from the session transcript into the repo at **`scripts/verify/`**:
+    - paths made relative;
+    - later fixes re-applied;
+    - re-validated on a mock build, where everything passes.
+  - The `serve.sh`/`api.sh` helpers were made safe after a stale server caused one misleading check. They now refuse to start on a busy port and stop by port.
+- **P2-029: HTTP foundation.**
+  - `NEXT_PUBLIC_DATA_SOURCE=mock|http` and `BACKEND_URL`.
+  - A Next rewrite proxies `/api/*` to the backend, so cookies are first-party.
+  - `apiFetch` maps error envelopes to `ApiError` (shared `fromErrorEnvelope`, with tests).
+- **P2-030: server catalog over HTTP**, with Next caching (listings 60 s, products 5 min).
+  - All Phase 1 catalog, SEO, a11y and crawl suites pass in `http` mode.
+  - **Gotcha found:** build and start must use the same `BACKEND_URL`. Server-side API failures are now logged.
+- **P2-031: browser adapters over HTTP**, with no component changes.
+  - Place Order sends an idempotency key per attempt.
+  - The journeys script runs in Node through the real Next proxy with a cookie jar: all 31 checks pass.
+- **P2-032: one stock truth.**
+  - There is no localStorage overlay in `http` mode.
+  - The PDP reads live stock from the API (`useLiveProduct`).
+  - Verified by selling a product out: the PDP showed Out of Stock immediately, and the listing caught up after its 60 s window.
+- **P2-033: `proxy.ts`.** Guests get a 307 to `/login?from=…` for protected pages in `http` mode. New suite `check-proxy.py`.
+- **P2-034: full regression** on fresh builds and a fresh `nivora_test`. Everything passes, and screenshots match Phase 1.
+  - Joseph's manual browser walkthrough against the real backend is still to do.
+- **Progress:** 34 / 39.
+
+---
+
+## Session 2 (continued): Fix — clearing the header search
+
+- **Joseph reported:** after a search, clearing the search box still left the old results on screen.
+- **Cause:** the search bar ignored an empty submission, and nothing reacted to clearing, so `/search?q=…` stayed.
+- **Fix (`SearchBar.tsx`):**
+  - A **× clear button** (shown when there's text), **Escape** and **submitting an empty box** all clear the search. On the results page they go Home, which is the same rule the search page already applies to empty queries.
+  - Backspacing alone only empties the box. It deliberately doesn't navigate, so a customer can delete the old term and type a new one.
+  - The browser's own clear icon is hidden, so there is only one ×.
+- **Verified:** new real-browser suite `scripts/verify/check-search-clear.mjs`, 9 checks, all pass. Screenshots at desktop and phone width; typecheck and lint clean.
+
+---
+
+## Session 2 (continued): Stage P9 — Hardening, docs and sign-off (P2-035 to P2-039)
+
+- **P2-035: security review.**
+  - The API refuses to start in production without Secure cookies.
+  - The frontend now sends security headers.
+  - New `security` e2e suite (15 tests): cross-customer access to every resource, 12 cross-origin mutations, no internals in errors, and no secrets, phones or emails in logs.
+  - `npm audit`: the production-tree findings are all inside the Prisma CLI. They are accepted (npm's "fix" is a Prisma 6 downgrade, and overrides broke the CLI, so they were reverted).
+- **P2-036: cleanup.** An hourly purge of expired sessions and guest carts idle for 30 days (no scheduler library added). `/health` reports DB latency.
+- **P2-037: performance.**
+  - No N+1 patterns.
+  - Round trips cut on the hot paths: session lookup 2 → 1, cart 5 → 3, add to cart 15 → 7, place order 17 → 14.
+  - p50 latency: listing/product ~0.3 s, add to cart 1.5 s (was 4.7 s), place order ~5 s.
+  - Latency ≈ round trips × ~290 ms to us-east-2, so an Asia-region database is the real fix.
+- **Found while re-running everything:**
+  - Two catalog parity tests compared against "initial stock + adjustments", whereas the API (by design) returns current stock.
+  - A bootstrap test predated the `/cart/items` route.
+  - Both tests were fixed, and the parity suite now always runs with moved stock.
+- **P2-038: docs and runbook.** README, backend runbook with the API reference, frontend README, a guide to `scripts/verify`, and the final barch decisions.
+  - A clean checkout set up from the README alone, through install → migrate → seed → run → health.
+- **P2-039: scope check and sign-off.**
+  - The scan is clean: COD only, no admin, OTP or shipping integrations.
+  - Verification map and open items recorded.
+- **Also (Joseph's request):** `frontend/.env` switched to `http` mode (the real backend). The header search now leaves the results page when cleared.
+- **Final test run:** shared 127, backend unit 45, backend e2e 165 — all pass.
+- **Progress:** 39 / 39. Still to do: Joseph's browser walkthrough in `http` mode, his sign-off, and the open items (rotate the DB password, Asia region, hosting).

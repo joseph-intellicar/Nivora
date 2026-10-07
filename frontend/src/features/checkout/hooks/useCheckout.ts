@@ -36,6 +36,8 @@ export function usePlaceOrder() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.cart(userId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.orders(userId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.inventory() });
+      // Live stock for product pages and pickers (http mode reads it from the API).
+      void queryClient.invalidateQueries({ queryKey: ["product"] });
       queryClient.removeQueries({ queryKey: ["checkout", userId] });
     },
   });

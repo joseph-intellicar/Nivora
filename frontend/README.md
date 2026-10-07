@@ -1,6 +1,6 @@
 # Nivora Frontend
 
-The customer-facing Nivora web application (Phase 1).
+The customer-facing Nivora web application. It runs on mock data (`mock`, Phase 1) or on the Nivora API (`http`, Phase 2).
 
 Stack: Next.js (App Router) · React · TypeScript · Tailwind CSS · TanStack Query ·
 Zustand · React Hook Form · Zod.
@@ -13,14 +13,16 @@ Zustand · React Hook Form · Zod.
 ## Getting started
 
 Test account: **joseph@example.com / password123** (has 4 sample orders). Nobody is logged in automatically.
-To reset the demo, clear the `nivora:` keys in DevTools → Application → Local storage.
+In mock mode, reset the demo by clearing the `nivora:` keys in DevTools → Application → Local storage. In `http` mode, data lives in the database (`cd backend && npx prisma db seed -- --reset` resets a development database).
 
-Prerequisites: Node.js LTS and npm.
+Prerequisites: Node.js 22 and npm. Install once from the **repository root** (npm workspaces):
 
 ```bash
-npm install
-npm run dev      # http://localhost:3000
+npm install            # at the repo root
+npm run dev:web        # http://localhost:3000 (or `npm run dev` inside frontend/)
 ```
+
+In `http` mode, start the API first (`npm run dev:api`; see [`../backend/README.md`](../backend/README.md)).
 
 | Script                 | Purpose                                               |
 | ---------------------- | ----------------------------------------------------- |
@@ -37,20 +39,29 @@ npm run dev      # http://localhost:3000
 Settings are read in `src/config/site.ts`, which has safe defaults for every value.
 `.env` holds the local values and is not committed. `.env.example` documents every variable.
 
-| Variable                      | Default                 | Purpose                                                     |
-| ----------------------------- | ----------------------- | ----------------------------------------------------------- |
-| `NEXT_PUBLIC_SITE_URL`        | `http://localhost:3000` | Base URL for canonical links, sitemap, social previews      |
-| `NEXT_PUBLIC_DATA_SOURCE`     | `mock`                  | Data layer implementation (Phase 1: `mock` only)            |
-| `NEXT_PUBLIC_MOCK_LATENCY_MS` | `250`                   | Simulated delay for mock customer-data calls (`0` disables) |
-| `NEXT_PUBLIC_ALLOW_INDEXING`  | `false`                 | Search engine indexing; keep `false` while using mock data  |
+| Variable                      | Default                 | Purpose                                                       |
+| ----------------------------- | ----------------------- | ------------------------------------------------------------- |
+| `NEXT_PUBLIC_SITE_URL`        | `http://localhost:3000` | Base URL for canonical links, sitemap, social previews        |
+| `NEXT_PUBLIC_DATA_SOURCE`     | `mock`                  | `mock` (browser storage) or `http` (the Nivora API)           |
+| `BACKEND_URL`                 | —                       | API base URL for `http` mode (server-side; proxied as `/api`) |
+| `NEXT_PUBLIC_MOCK_LATENCY_MS` | `250`                   | Simulated delay for mock customer-data calls (`0` disables)   |
+| `NEXT_PUBLIC_ALLOW_INDEXING`  | `false`                 | Search engine indexing; keep `false` while using mock data    |
 
-`NEXT_PUBLIC_*` values are inlined at build time. Restart `npm run dev` after changing them.
+`NEXT_PUBLIC_*` values and `BACKEND_URL` are read at build time. Restart `npm run dev` after changing them, and give `next build` and `next start` the same `BACKEND_URL`.
+
+## Data layer
+
+- `src/api/client` (browser) and `src/api/server` (Server Components) choose their adapters from `NEXT_PUBLIC_DATA_SOURCE`: the mock adapters (`*/mock`), or the HTTP adapters in `src/api/http`.
+- In `http` mode the browser calls same-origin `/api/*`, and `next.config.ts` rewrites it to `${BACKEND_URL}/api/v1/*`, so the session and guest-cart cookies stay first-party.
+- Server Components call `BACKEND_URL` directly, with Next caching: listings 60 s, product pages 5 min, taxonomy and content 1 h.
+- In `http` mode, `src/proxy.ts` redirects guests away from `/account*`, `/checkout`, `/wishlist` and `/order-confirmation*` before render. `RequireAuth` remains as the client-side fallback.
 
 ## Code boundaries (enforced by ESLint)
 
 - Only `src/api/client/mock/storage.ts` may use `localStorage` / `sessionStorage`.
-- `@/api/*/mock` and `@/data` may only be imported inside `src/api`.
-- `'use client'` files may not import `@/api/server` or `@/data`.
+- `@/api/*/mock` and `@nivora/shared/data` may only be imported inside `src/api`.
+- `'use client'` files may not import `@/api/server` or `@nivora/shared/data`.
+- Business rules, validation, contracts and catalog data come from `@nivora/shared` (never by relative path into `packages/shared`).
 - Route files may not import `@/api/client` or `@/stores`.
 - Import with the `@/` alias, not long relative paths, so these rules apply.
 

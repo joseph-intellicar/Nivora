@@ -44,10 +44,11 @@ describe("HTTP bootstrap (e2e, barch §13)", () => {
       .expect(403);
   });
 
+  // A path with no route: passing the Origin check shows up as the router's 404 (not a 403).
   it("lets same-origin mutating requests through (Origin or Referer)", async () => {
-    await request(http).post("/api/v1/cart/items").set("Origin", FRONTEND).send({}).expect(404);
+    await request(http).post("/api/v1/no-such-route").set("Origin", FRONTEND).send({}).expect(404);
     await request(http)
-      .post("/api/v1/cart/items")
+      .post("/api/v1/no-such-route")
       .set("Referer", `${FRONTEND}/cart`)
       .send({})
       .expect(404);

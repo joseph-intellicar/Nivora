@@ -17,7 +17,7 @@ describe("GET /api/v1/health (e2e, barch §19)", () => {
 
   it("reports the API and database as healthy, uncached", async () => {
     const res = await request(app.getHttpServer()).get("/api/v1/health").expect(200);
-    expect(res.body).toEqual({ status: "ok", db: "ok" });
+    expect(res.body).toEqual({ status: "ok", db: "ok", dbLatencyMs: expect.any(Number) });
     expect(res.headers["cache-control"]).toBe("no-store");
   });
 

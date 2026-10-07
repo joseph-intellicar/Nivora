@@ -1,0 +1,11 @@
+const { useToastStore, toast } = await import(new URL("../../frontend/src/stores/toastStore.ts", import.meta.url).href);
+const assert = (c, m) => { console.log((c ? "PASS " : "FAIL ") + m); if (!c) process.exitCode = 1; };
+const s = () => useToastStore.getState();
+const a = toast.success("Added to cart", { action: { label: "View Cart", href: "/cart" } });
+assert(s().toasts.length === 1 && s().toasts[0].variant === "success" && s().toasts[0].duration === 5000, "success toast added with defaults");
+const b = toast.error("Only 2 left in stock.");
+assert(b !== a && s().toasts[1].variant === "error", "error toast gets a unique id and error variant");
+toast.info("x"); toast.info("y");
+assert(s().toasts.length === 3 && s().toasts[0].title === "Only 2 left in stock.", "queue capped at 3, oldest dropped");
+s().dismiss(b);
+assert(s().toasts.every(t => t.id !== b) && s().toasts.length === 2, "dismiss removes only that toast");

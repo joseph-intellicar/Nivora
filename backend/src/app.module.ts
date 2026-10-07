@@ -11,6 +11,7 @@ import { CartModule } from "./modules/cart/cart.module.js";
 import { CatalogModule } from "./modules/catalog/catalog.module.js";
 import { ContentModule } from "./modules/content/content.module.js";
 import { HealthModule } from "./modules/health/health.module.js";
+import { MaintenanceModule } from "./modules/maintenance/maintenance.module.js";
 import { OrdersModule } from "./modules/orders/orders.module.js";
 import { ProfileModule } from "./modules/profile/profile.module.js";
 import { WishlistModule } from "./modules/wishlist/wishlist.module.js";
@@ -31,6 +32,7 @@ import { PrismaModule } from "./prisma/prisma.module.js";
     WishlistModule,
     AddressesModule,
     OrdersModule,
+    MaintenanceModule,
   ],
   // Generous default for every route; auth routes add a stricter @RateLimit (barch §13).
   providers: [

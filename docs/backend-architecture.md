@@ -1,12 +1,12 @@
 # Nivora — Backend Architecture (Phase 2)
 
-| | |
-|---|---|
-| **Scope** | Phase 2: a real backend in `backend/` that replaces the Phase 1 mock/localStorage data layer |
+|                  |                                                                                                                          |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **Scope**        | Phase 2: a real backend in `backend/` that replaces the Phase 1 mock/localStorage data layer                             |
 | **Requirements** | [`../requirements.md`](../requirements.md) (req §) · frontend architecture [`architecture.md`](architecture.md) (arch §) |
-| **Stack** | NestJS + TypeScript · Prisma ORM · Neon PostgreSQL (agreed with Joseph, 2026-10-06) |
-| **Status** | Proposed — implementation not started |
-| **Last updated** | 2026-10-06 |
+| **Stack**        | NestJS + TypeScript · Prisma ORM · Neon PostgreSQL (agreed with Joseph, 2026-10-06)                                      |
+| **Status**       | Proposed — implementation not started                                                                                    |
+| **Last updated** | 2026-10-06                                                                                                               |
 
 The frontend is complete and talks to a typed data-layer contract (arch §7). Phase 2 builds a backend that implements the **same contract over HTTP**, so the frontend switches by swapping adapters, not by rewriting pages (req §36, arch §21). Everything the Phase 1 mock adapters do — validation, stock, prices, cart merge, orders — moves to the server, which becomes the single source of truth.
 
@@ -42,11 +42,11 @@ The frontend is complete and talks to a typed data-layer contract (arch §7). Ph
 
 **Yes.** What the backend must do is fully defined by the requirements and the frontend's contracts (arch §7.1): accounts and sessions, catalog queries, carts, wishlists, addresses, checkout, orders and inventory — a classic transactional e-commerce API.
 
-| Choice | Why it fits Nivora |
-|---|---|
+| Choice                  | Why it fits Nivora                                                                                                                                                                                                                                                                                         |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **NestJS + TypeScript** | Module-per-feature structure maps 1:1 onto the frontend contracts (auth, cart, wishlist, addresses, checkout, orders, catalog). Guards, pipes and filters give clean places for sessions, validation and error mapping. Same language as the frontend, so domain rules and schemas can be **shared** (§3). |
-| **Prisma ORM** | Typed queries generated from one schema, migrations, and interactive transactions — needed for stock-safe order placement (§11). |
-| **Neon PostgreSQL** | Real relational integrity (orders ↔ items ↔ variants), transactions and row-level conditional updates for stock, JSONB for flexible product attributes, and serverless Postgres with branching (useful for a separate test database, §18). |
+| **Prisma ORM**          | Typed queries generated from one schema, migrations, and interactive transactions — needed for stock-safe order placement (§11).                                                                                                                                                                           |
+| **Neon PostgreSQL**     | Real relational integrity (orders ↔ items ↔ variants), transactions and row-level conditional updates for stock, JSONB for flexible product attributes, and serverless Postgres with branching (useful for a separate test database, §18).                                                                 |
 
 Verified on 2026-10-06: the Neon database is reachable on both the pooled and direct endpoints, runs **PostgreSQL 18.6**, and is empty.
 
@@ -54,30 +54,30 @@ Verified on 2026-10-06: the Neon database is reachable on both the pooled and di
 
 ### 2.1 Agreed
 
-| Concern | Choice | Notes |
-|---|---|---|
-| Framework | **NestJS 12** | Requires Node ≥ 20; the project uses Node 22 LTS. **Nest 12 packages are ESM-only**, so the backend is an ES module app (`"type": "module"`, `module: nodenext`) |
-| Language | **TypeScript 6.0** (strict), whole repo | Nest 12's CLI/schematics require TypeScript ≥ 6, so frontend, shared and backend all moved to `~6.0` together (P2-008; frontend and shared re-verified). TypeScript 7 is not used yet |
-| ORM | **Prisma 7.10** (stable) | Not 8.0 — npm's `latest` tag currently points to an 8.0 release candidate; pin 7.x |
-| Database | **Neon PostgreSQL 18** | Pooled endpoint for the API, direct endpoint for migrations (§14) |
-| Driver adapter | **`@prisma/adapter-pg`** | Prisma 7 requires a driver adapter; `adapter-pg` (TCP) suits a long-running server. `@prisma/adapter-neon` is for serverless/edge runtimes |
-| Validation | **Zod 4** | Shared with the frontend (§3, §12) |
-| Package manager | **npm** (workspaces) | Same as the frontend |
-| Tests | **Jest** (+ Supertest for HTTP) | Agreed: automated tests for the backend, run in a separate `nivora_test` schema of the main database (§18). Nest 12's own scaffold now defaults to Vitest + oxlint; we keep the approved Jest (native ESM mode via ts-jest) and ESLint, aligned with the frontend |
+| Concern         | Choice                                  | Notes                                                                                                                                                                                                                                                             |
+| --------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Framework       | **NestJS 12**                           | Requires Node ≥ 20; the project uses Node 22 LTS. **Nest 12 packages are ESM-only**, so the backend is an ES module app (`"type": "module"`, `module: nodenext`)                                                                                                  |
+| Language        | **TypeScript 6.0** (strict), whole repo | Nest 12's CLI/schematics require TypeScript ≥ 6, so frontend, shared and backend all moved to `~6.0` together (P2-008; frontend and shared re-verified). TypeScript 7 is not used yet                                                                             |
+| ORM             | **Prisma 7.10** (stable)                | Not 8.0 — npm's `latest` tag currently points to an 8.0 release candidate; pin 7.x                                                                                                                                                                                |
+| Database        | **Neon PostgreSQL 18**                  | Pooled endpoint for the API, direct endpoint for migrations (§14)                                                                                                                                                                                                 |
+| Driver adapter  | **`@prisma/adapter-pg`**                | Prisma 7 requires a driver adapter; `adapter-pg` (TCP) suits a long-running server. `@prisma/adapter-neon` is for serverless/edge runtimes                                                                                                                        |
+| Validation      | **Zod 4**                               | Shared with the frontend (§3, §12)                                                                                                                                                                                                                                |
+| Package manager | **npm** (workspaces)                    | Same as the frontend                                                                                                                                                                                                                                              |
+| Tests           | **Jest** (+ Supertest for HTTP)         | Agreed: automated tests for the backend, run in a separate `nivora_test` schema of the main database (§18). Nest 12's own scaffold now defaults to Vitest + oxlint; we keep the approved Jest (native ESM mode via ts-jest) and ESLint, aligned with the frontend |
 
 ### 2.2 Additional libraries — approved
 
 Approved by Joseph on 2026-10-06.
 
-| Library | Purpose |
-|---|---|
-| `argon2` | Password hashing (argon2id) — replaces Phase 1 plain-text mock passwords (req §5.3) |
-| `cookie-parser` | Reading the session and guest-cart cookies |
-| `helmet` | Security headers |
+| Library                                             | Purpose                                                                                                                                                                                                                                                                                                                           |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `argon2`                                            | Password hashing (argon2id) — replaces Phase 1 plain-text mock passwords (req §5.3)                                                                                                                                                                                                                                               |
+| `cookie-parser`                                     | Reading the session and guest-cart cookies                                                                                                                                                                                                                                                                                        |
+| `helmet`                                            | Security headers                                                                                                                                                                                                                                                                                                                  |
 | ~~`@nestjs/throttler`~~ → in-house `RateLimitGuard` | Rate limiting (login/signup brute-force protection). **Replaced in P2-009:** throttler 6.7 is still CommonJS and `require()`s the ESM-only Nest 12, which Jest cannot load on Node 22. The ~70-line guard (`src/common/rate-limit`) gives the same in-memory, per-client fixed windows, 429 + `Retry-After`; one fewer dependency |
-| `@nestjs/config` + `dotenv` | Environment loading — Prisma 7 no longer loads `.env` automatically |
-| `supertest` | HTTP-level tests with Jest |
-| `tsx` | Running the Prisma seed script (Prisma 7 seeds via `prisma.config.ts`) |
+| `@nestjs/config` + `dotenv`                         | Environment loading — Prisma 7 no longer loads `.env` automatically                                                                                                                                                                                                                                                               |
+| `supertest`                                         | HTTP-level tests with Jest                                                                                                                                                                                                                                                                                                        |
+| `tsx`                                               | Running the Prisma seed script (Prisma 7 seeds via `prisma.config.ts`)                                                                                                                                                                                                                                                            |
 
 **Not adopted:** Passport/JWT (sessions are opaque DB tokens, §8), class-validator/class-transformer (Zod is shared instead), Redis (not needed at this scale), GraphQL (REST matches the contracts).
 
@@ -151,19 +151,19 @@ Rules:
 
 ## 5. Modules
 
-| Module | Responsibilities | Frontend contract |
-|---|---|---|
-| `health` | `GET /health` (liveness + DB ping) | — |
-| `auth` | Signup, login, logout, current session; session cookies; guest-cart merge on login | `AuthApi` |
-| `users` | Profile read/update (name, phone; email read-only) | `ProfileApi` |
-| `catalog` | Categories, product listing (filters, facets, sort, search, pagination), product details with live stock, collections, slugs | `CatalogApi`, `ClientCatalogApi` |
-| `content` | Info pages (About, Contact, Help, Returns, Privacy, Terms) | `ContentApi` |
-| `inventory` | Stock reads; atomic decrement/restore used by checkout and orders | (replaces `InventoryApi`) |
-| `cart` | Guest and customer carts, line revalidation, totals | `CartApi` |
-| `wishlist` | Per-user wishlist, move to cart | `WishlistApi` |
-| `addresses` | CRUD, default address | `AddressApi` |
-| `checkout` | Buy Now / cart checkout sessions, checkout view, place order | `CheckoutApi` |
-| `orders` | History, details (own orders only), cancellation | `OrderApi` |
+| Module      | Responsibilities                                                                                                             | Frontend contract                |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| `health`    | `GET /health` (liveness + DB ping)                                                                                           | —                                |
+| `auth`      | Signup, login, logout, current session; session cookies; guest-cart merge on login                                           | `AuthApi`                        |
+| `users`     | Profile read/update (name, phone; email read-only)                                                                           | `ProfileApi`                     |
+| `catalog`   | Categories, product listing (filters, facets, sort, search, pagination), product details with live stock, collections, slugs | `CatalogApi`, `ClientCatalogApi` |
+| `content`   | Info pages (About, Contact, Help, Returns, Privacy, Terms)                                                                   | `ContentApi`                     |
+| `inventory` | Stock reads; atomic decrement/restore used by checkout and orders                                                            | (replaces `InventoryApi`)        |
+| `cart`      | Guest and customer carts, line revalidation, totals                                                                          | `CartApi`                        |
+| `wishlist`  | Per-user wishlist, move to cart                                                                                              | `WishlistApi`                    |
+| `addresses` | CRUD, default address                                                                                                        | `AddressApi`                     |
+| `checkout`  | Buy Now / cart checkout sessions, checkout view, place order                                                                 | `CheckoutApi`                    |
+| `orders`    | History, details (own orders only), cancellation                                                                             | `OrderApi`                       |
 
 ## 6. Data model (Prisma)
 
@@ -356,46 +356,52 @@ enum OrderStatus { Placed Confirmed Shipped Delivered Cancelled }
 
 Base path **`/api/v1`**, JSON only. Each endpoint maps to one method of the frontend contract (arch §7.1). 🔒 = customer session required; 👤 = guest or customer.
 
-| Method & path | Contract method | Access |
-|---|---|---|
-| `GET /health` | — | public |
-| `GET /categories` | `catalog.getCategories` | public |
-| `GET /products?…` (same params as the listing URLs, arch §13.3) | `catalog.listProducts` | public |
-| `GET /products/:slug` | `catalog.getProduct` (+ live stock per variant) | public |
-| `GET /products/slugs` | `catalog.getAllProductSlugs` | public |
-| `GET /collections/:id?limit=` | `catalog.getCollection` | public |
-| `GET /content/pages/:slug` | `content.getInfoPage` | public |
-| `GET /auth/session` | `auth.getSession` | 👤 |
-| `POST /auth/signup` · `POST /auth/login` · `POST /auth/logout` | `auth.*` | 👤 |
-| `GET /cart` | `cart.getCart` | 👤 |
-| `POST /cart/items` · `PATCH /cart/items/:variantId` · `DELETE /cart/items/:variantId` | `cart.addItem` · `updateQuantity` · `removeItem` | 👤 |
-| `GET /wishlist` · `PUT /wishlist/:productId` · `DELETE /wishlist/:productId` | `wishlist.*` | 🔒 |
-| `POST /wishlist/:productId/move-to-cart` | `wishlist.moveToCart` | 🔒 |
-| `GET /addresses` · `POST /addresses` · `PUT /addresses/:id` · `DELETE /addresses/:id` · `POST /addresses/:id/default` | `addresses.*` | 🔒 |
-| `POST /checkout/buy-now` · `POST /checkout/cart` · `GET /checkout?deliveryOption=` | `checkout.startBuyNow` · `startCartCheckout` · `getCheckout` | 🔒 |
-| `POST /orders` | `checkout.placeOrder` | 🔒 |
-| `GET /orders` · `GET /orders/:orderNumber` · `POST /orders/:orderNumber/cancel` | `orders.*` | 🔒 |
-| `GET /me` · `PATCH /me` | `profile.get` · `profile.update` | 🔒 |
+| Method & path                                                                                                         | Contract method                                              | Access |
+| --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ------ |
+| `GET /health`                                                                                                         | —                                                            | public |
+| `GET /categories`                                                                                                     | `catalog.getCategories`                                      | public |
+| `GET /products?…` (same params as the listing URLs, arch §13.3)                                                       | `catalog.listProducts`                                       | public |
+| `GET /products/:slug`                                                                                                 | `catalog.getProduct` (+ live stock per variant)              | public |
+| `GET /products/slugs`                                                                                                 | `catalog.getAllProductSlugs`                                 | public |
+| `GET /collections/:id?limit=`                                                                                         | `catalog.getCollection`                                      | public |
+| `GET /content/pages/:slug`                                                                                            | `content.getInfoPage`                                        | public |
+| `GET /auth/session`                                                                                                   | `auth.getSession`                                            | 👤     |
+| `POST /auth/signup` · `POST /auth/login` · `POST /auth/logout`                                                        | `auth.*`                                                     | 👤     |
+| `GET /cart`                                                                                                           | `cart.getCart`                                               | 👤     |
+| `POST /cart/items` · `PATCH /cart/items/:variantId` · `DELETE /cart/items/:variantId`                                 | `cart.addItem` · `updateQuantity` · `removeItem`             | 👤     |
+| `GET /wishlist` · `PUT /wishlist/:productId` · `DELETE /wishlist/:productId`                                          | `wishlist.*`                                                 | 🔒     |
+| `POST /wishlist/:productId/move-to-cart`                                                                              | `wishlist.moveToCart`                                        | 🔒     |
+| `GET /addresses` · `POST /addresses` · `PUT /addresses/:id` · `DELETE /addresses/:id` · `POST /addresses/:id/default` | `addresses.*`                                                | 🔒     |
+| `POST /checkout/buy-now` · `POST /checkout/cart` · `GET /checkout?deliveryOption=`                                    | `checkout.startBuyNow` · `startCartCheckout` · `getCheckout` | 🔒     |
+| `POST /orders`                                                                                                        | `checkout.placeOrder`                                        | 🔒     |
+| `GET /orders` · `GET /orders/:orderNumber` · `POST /orders/:orderNumber/cancel`                                       | `orders.*`                                                   | 🔒     |
+| `GET /me` · `PATCH /me`                                                                                               | `profile.get` · `profile.update`                             | 🔒     |
 
 **Error envelope** (all errors):
 
 ```json
-{ "error": { "code": "INSUFFICIENT_STOCK", "message": "Only 2 left in stock.", "details": { "available": 2, "productName": "…" } } }
+{
+  "error": {
+    "code": "INSUFFICIENT_STOCK",
+    "message": "Only 2 left in stock.",
+    "details": { "available": 2, "productName": "…" }
+  }
+}
 ```
 
 `code` uses the shared `ApiErrorCode` list (arch §7.3) so the frontend's message mapping keeps working; `message` is the req §28 customer wording from `@nivora/shared/errorMessages` (the same module the UI uses). Two codes were added in P2-010 for API-only situations: `FORBIDDEN` (cross-origin request) and `RATE_LIMITED`.
 
-| Status | Codes |
-|---|---|
-| 400 | `VALIDATION` (no field details, malformed JSON), `INVALID_QUANTITY`, `INVALID_VARIANT`, `VARIANT_REQUIRED` |
-| 401 | `UNAUTHENTICATED`, `INVALID_CREDENTIALS` |
-| 403 | `FORBIDDEN` |
-| 404 | `NOT_FOUND` (also unknown routes and Prisma "record not found") |
-| 409 | `EMAIL_TAKEN`, `OUT_OF_STOCK`, `INSUFFICIENT_STOCK`, `EMPTY_CART`, `ADDRESS_REQUIRED`, `ORDER_NOT_CANCELLABLE` |
-| 413 / 415 | `VALIDATION` (body over 100 kb / not JSON) |
-| 422 | `VALIDATION` with `details.fields`, `INVALID_ADDRESS` |
-| 429 | `RATE_LIMITED` (+ `Retry-After`) |
-| 500 | `UNKNOWN` — logged server-side with the request id; the response never contains stack traces or messages |
+| Status    | Codes                                                                                                          |
+| --------- | -------------------------------------------------------------------------------------------------------------- |
+| 400       | `VALIDATION` (no field details, malformed JSON), `INVALID_QUANTITY`, `INVALID_VARIANT`, `VARIANT_REQUIRED`     |
+| 401       | `UNAUTHENTICATED`, `INVALID_CREDENTIALS`                                                                       |
+| 403       | `FORBIDDEN`                                                                                                    |
+| 404       | `NOT_FOUND` (also unknown routes and Prisma "record not found")                                                |
+| 409       | `EMAIL_TAKEN`, `OUT_OF_STOCK`, `INSUFFICIENT_STOCK`, `EMPTY_CART`, `ADDRESS_REQUIRED`, `ORDER_NOT_CANCELLABLE` |
+| 413 / 415 | `VALIDATION` (body over 100 kb / not JSON)                                                                     |
+| 422       | `VALIDATION` with `details.fields`, `INVALID_ADDRESS`                                                          |
+| 429       | `RATE_LIMITED` (+ `Retry-After`)                                                                               |
+| 500       | `UNKNOWN` — logged server-side with the request id; the response never contains stack traces or messages       |
 
 ## 8. Authentication and sessions
 
@@ -476,15 +482,15 @@ Decision (Joseph, 2026-10-06): **guest carts live on the server**, keyed by an a
 
 Environment variables, validated with Zod at startup (the app refuses to start on a bad config):
 
-| Variable | Example | Purpose |
-|---|---|---|
-| `DATABASE_URL` | Neon pooled URL | API queries |
-| `DIRECT_URL` | Neon direct URL | Migrations |
-| `PORT` | `4000` | API port |
-| `FRONTEND_ORIGIN` | `http://localhost:3000` | Origin checks / CORS |
-| `COOKIE_SECURE` | `false` locally, `true` in production | Cookie `Secure` flag |
-| `SESSION_TTL_DAYS` | `30` | Session lifetime |
-| `NODE_ENV` | `development` | Behaviour/logging |
+| Variable           | Example                               | Purpose              |
+| ------------------ | ------------------------------------- | -------------------- |
+| `DATABASE_URL`     | Neon pooled URL                       | API queries          |
+| `DIRECT_URL`       | Neon direct URL                       | Migrations           |
+| `PORT`             | `4000`                                | API port             |
+| `FRONTEND_ORIGIN`  | `http://localhost:3000`               | Origin checks / CORS |
+| `COOKIE_SECURE`    | `false` locally, `true` in production | Cookie `Secure` flag |
+| `SESSION_TTL_DAYS` | `30`                                  | Session lifetime     |
+| `NODE_ENV`         | `development`                         | Behaviour/logging    |
 
 The Neon credentials provided by Joseph are stored **only** in `backend/.env` (permissions 600, git-ignored). They have also appeared in chat; rotating the database password before any public deployment is recommended (§21).
 
@@ -513,16 +519,24 @@ The frontend changes only in its data layer (arch §21):
 6. **Place Order** sends an `Idempotency-Key`.
 7. Every existing frontend check (HTTP suites, journeys rewritten against the API, accessibility, crawl) must pass in `http` mode.
 
+**As built (P2-029 – P2-034, 2026-10-07):**
+
+- `src/api/http/client.ts` (`apiFetch`, shared `fromErrorEnvelope`), `http/server.ts` (catalog/content with Next caching: listings 60 s, products 5 min, taxonomy/content 1 h) and `http/browser.ts` (all client contracts; Place Order idempotency key per attempt).
+- `NEXT_PUBLIC_DATA_SOURCE=mock|http` selects the adapters, and `BACKEND_URL` is shared by the rewrite and the server adapter. Both are read at build time, so build and start need the same value.
+- **Stock in `http` mode:** there is no overlay (the inventory adapter returns `{}`). The PDP purchase panel reads live stock through `useLiveProduct`, and orders and cancellations invalidate `["product"]` queries.
+- `src/proxy.ts` (`http` mode) sends guests a 307 to `/login?from=…` for `/account*`, `/checkout`, `/wishlist` and `/order-confirmation*`, based on the presence of the `nivora_session` cookie.
+- Verified in `http` mode against fresh builds and the `nivora_test` schema: the HTTP suites, SEO on/off, a11y, a 209-URL crawl, the journeys (through the Next proxy with a cookie jar), login intents, server-side protection and screenshots. The verification scripts live in `scripts/verify/`.
+
 ## 18. Testing
 
 Decision (Joseph, 2026-10-06): **Jest** for the backend. Because Nest 12 is ESM-only, backend Jest runs in native ESM mode (`NODE_OPTIONS=--experimental-vm-modules`, ts-jest `useESM`); the shared package's Jest runs as CommonJS.
 
-| Layer | What | How |
-|---|---|---|
-| Unit | Shared domain rules (pricing, merge, filters, search, orders) | Jest in `packages/shared` (ports the existing scenario scripts) |
-| Service | Business flows with a real database | Jest against the `nivora_test` schema of the main database; that schema is migrated and reset per run |
-| HTTP (e2e) | Every endpoint: status codes, envelopes, cookies, auth guards | Jest + Supertest on the Nest app |
-| Critical | Concurrency: two simultaneous orders for the last unit → exactly one succeeds; cancel restores stock once | e2e |
+| Layer      | What                                                                                                      | How                                                                                                   |
+| ---------- | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Unit       | Shared domain rules (pricing, merge, filters, search, orders)                                             | Jest in `packages/shared` (ports the existing scenario scripts)                                       |
+| Service    | Business flows with a real database                                                                       | Jest against the `nivora_test` schema of the main database; that schema is migrated and reset per run |
+| HTTP (e2e) | Every endpoint: status codes, envelopes, cookies, auth guards                                             | Jest + Supertest on the Nest app                                                                      |
+| Critical   | Concurrency: two simultaneous orders for the last unit → exactly one succeeds; cancel restores stock once | e2e                                                                                                   |
 
 The Phase 1 journey script (`e2e-journeys`) is re-expressed as an API e2e suite so both phases are held to the same behaviour.
 
@@ -535,27 +549,33 @@ The Phase 1 journey script (`e2e-journeys`) is re-expressed as an API e2e suite 
 
 ## 20. Implementation plan
 
-| # | Milestone | Delivers |
-|---|---|---|
-| B1 | Workspaces + shared package | Root `package.json` with npm workspaces; `packages/shared` (domain, validation, contracts, data, constants) moved out of the frontend; frontend imports updated; **all frontend checks still green** |
-| B2 | Backend scaffold | NestJS 12 app, strict TS, ESLint/Prettier, env validation, `/api/v1`, helmet, cookie-parser, rate limiting, error filter, Zod pipe, `/health`; Prisma 7 + adapter-pg wired to Neon; module-format decision verified |
-| B3 | Schema + migrations + seed | `schema.prisma` (§6), first migration on Neon, CHECK constraints, order sequence, idempotent seed (catalog, Joseph, sample orders) |
-| B4 | Catalog + content API | Categories, listing (shared pipeline + live stock), product details, collections, slugs, info pages |
-| B5 | Auth + sessions + profile | Signup/login/logout/session, argon2, cookies, guards, rate limits, `/me` |
-| B6 | Cart + wishlist | Guest/customer carts with cookie, merge on login, revalidation, wishlist + move to cart |
-| B7 | Addresses + checkout + orders | Address CRUD/default, checkout sessions, transactional place order with conditional stock, idempotency, cancel with restore |
-| B8 | Frontend switch-over | HTTP adapters, rewrites, inventory overlay removed, `proxy.ts` (optional), all frontend suites passing in `http` mode |
-| B9 | Hardening | Concurrency tests, security review, cleanup jobs, documentation, deployment notes |
+| #   | Milestone                     | Delivers                                                                                                                                                                                                            |
+| --- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| B1  | Workspaces + shared package   | Root `package.json` with npm workspaces; `packages/shared` (domain, validation, contracts, data, constants) moved out of the frontend; frontend imports updated; **all frontend checks still green**                |
+| B2  | Backend scaffold              | NestJS 12 app, strict TS, ESLint/Prettier, env validation, `/api/v1`, helmet, cookie-parser, rate limiting, error filter, Zod pipe, `/health`; Prisma 7 + adapter-pg wired to Neon; module-format decision verified |
+| B3  | Schema + migrations + seed    | `schema.prisma` (§6), first migration on Neon, CHECK constraints, order sequence, idempotent seed (catalog, Joseph, sample orders)                                                                                  |
+| B4  | Catalog + content API         | Categories, listing (shared pipeline + live stock), product details, collections, slugs, info pages                                                                                                                 |
+| B5  | Auth + sessions + profile     | Signup/login/logout/session, argon2, cookies, guards, rate limits, `/me`                                                                                                                                            |
+| B6  | Cart + wishlist               | Guest/customer carts with cookie, merge on login, revalidation, wishlist + move to cart                                                                                                                             |
+| B7  | Addresses + checkout + orders | Address CRUD/default, checkout sessions, transactional place order with conditional stock, idempotency, cancel with restore                                                                                         |
+| B8  | Frontend switch-over          | HTTP adapters, rewrites, inventory overlay removed, `proxy.ts` (optional), all frontend suites passing in `http` mode                                                                                               |
+| B9  | Hardening                     | Concurrency tests, security review, cleanup jobs, documentation, deployment notes                                                                                                                                   |
 
 Each milestone is verified with Jest + the existing HTTP checks before the next starts, following the same task-by-task workflow as Phase 1. The detailed task list is [`../tasks-phase2.md`](../tasks-phase2.md) (39 tasks, P2-001 – P2-039).
 
 ## 21. Open items
 
-| Item | Status |
-|---|---|
-| Extra libraries in §2.2 | **Approved** (2026-10-06) |
-| Test database | **Decided:** `nivora_test` schema in the main branch (no separate branch) |
-| Rotate the Neon database password | Recommended before any public deployment (the current one was shared in chat) |
-| Neon region | Currently AWS us-east-2; consider an Asia region for Indian customers before launch |
-| Hosting for API and frontend | Not decided |
-| CommonJS vs ESM for Nest + Prisma 7 | Decided and verified in B2 |
+Status at the end of Phase 2 (2026-10-07):
+
+| Item                                                          | Status                                                                                                                                                                                                              |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Extra libraries in §2.2                                       | **Approved** (2026-10-06). `@nestjs/throttler` was replaced by an in-house guard (P2-009); no scheduler library is used (P2-036)                                                                                    |
+| Test database                                                 | **Decided:** `nivora_test` schema in the main branch, guarded (P2-014)                                                                                                                                              |
+| CommonJS vs ESM                                               | **Decided:** ESM throughout (Nest 12 is ESM-only); the shared package stays CommonJS (P2-011)                                                                                                                       |
+| **Rotate the Neon database password**                         | **Required before any public deployment** (the current one was shared in chat). Update `backend/.env` and `.env.test` afterwards                                                                                    |
+| **Neon region**                                               | AWS us-east-2. From India each round trip costs ~290 ms, so place order takes ~4.7 s and add to cart ~1.5 s (P2-037). **Move to an Asia region** (Singapore/Mumbai) before launch; expected ~10–100 ms per endpoint |
+| Hosting for API and frontend                                  | Not decided (any Node host for the API, plus Vercel or similar). The API must sit behind the Next proxy or a load balancer (IP rate limits trust one proxy hop)                                                     |
+| Prisma CLI advisories (`deepmerge-ts`, `mysql2` via `prisma`) | Accepted: CLI-only, not loaded by the API. Revisit with the next Prisma 7.x patch (P2-035)                                                                                                                          |
+| Content-Security-Policy on the frontend                       | Not set yet (Next's inline scripts need nonces). The other security headers are in place (P2-035)                                                                                                                   |
+| Rate limits and cleanup with several API instances            | Rate-limit counters are per instance (in memory); move them to a shared store (e.g. Redis) when scaling out. Cleanup is idempotent and safe to run on every instance                                                |
+| Order status progression (Confirmed → Shipped → Delivered)    | Out of scope (decision D7). The status-event table is ready for an admin/fulfilment process                                                                                                                         |

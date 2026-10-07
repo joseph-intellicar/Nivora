@@ -1,4 +1,6 @@
 import type { ClientApi } from "@nivora/shared/contracts";
+import { siteConfig } from "@/config/site";
+import { httpApi } from "../http/browser";
 import { mockAddresses } from "./mock/addresses";
 import { mockAuth } from "./mock/auth";
 import { mockCart } from "./mock/cart";
@@ -10,10 +12,10 @@ import { mockProfile } from "./mock/profile";
 import { mockWishlist } from "./mock/wishlist";
 
 /**
- * Browser-side data layer (arch §7.1). Phase 1 uses the mock adapters
- * (NEXT_PUBLIC_DATA_SOURCE=mock); Phase 2 swaps in HTTP adapters with the same contract.
+ * Browser-side data layer (arch §7.1). NEXT_PUBLIC_DATA_SOURCE picks the adapters: "mock"
+ * (Phase 1, browser storage) or "http" (the Nivora API) — same contract either way.
  */
-export const api: ClientApi = {
+const mockApi: ClientApi = {
   catalog: mockClientCatalog,
   inventory: mockInventory,
   auth: mockAuth,
@@ -24,5 +26,7 @@ export const api: ClientApi = {
   orders: mockOrders,
   profile: mockProfile,
 };
+
+export const api: ClientApi = siteConfig.dataSource === "http" ? httpApi : mockApi;
 
 export { queryKeys, USER_SCOPED_ROOTS } from "./queryKeys";

@@ -8,7 +8,7 @@ import { queryCatalog } from "@nivora/shared/domain/filters";
 import request from "supertest";
 import { PrismaService } from "../src/prisma/prisma.service.js";
 import { createTestApp } from "./app-factory.js";
-import { liveAdjustments } from "./catalog-helpers.js";
+import { liveCatalog } from "./catalog-helpers.js";
 
 describe("catalog metadata and content (e2e, P2-015)", () => {
   let app: INestApplication;
@@ -44,13 +44,12 @@ describe("catalog metadata and content (e2e, P2-015)", () => {
     async (id, count, sort) => {
       const collection = COLLECTIONS.find((c) => c.id === id)!;
       expect(collection.defaultSort).toBe(sort);
-      const adjustments = await liveAdjustments(app.get(PrismaService));
+      const products = await liveCatalog(app.get(PrismaService));
       const expected = queryCatalog(
-        PRODUCTS,
+        products,
         { collection: collection.id, sort: collection.defaultSort, page: 1 },
         taxonomy,
         PRODUCTS.length,
-        adjustments,
       ).items;
       const res = await request(http).get(`/api/v1/collections/${id}`).expect(200);
       expect(res.body).toHaveLength(count);

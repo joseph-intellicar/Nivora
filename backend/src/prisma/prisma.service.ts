@@ -17,12 +17,25 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     const { connectionString, schema } = splitSchema(config.get("DATABASE_URL"));
     const logger = new Logger(PrismaService.name);
     super({
+      ...(process.env.PRISMA_LOG_QUERIES === "1"
+        ? { log: [{ emit: "event" as const, level: "query" as const }] }
+        : {}),
       adapter: new PrismaPg(
         { connectionString, max: 10, application_name: "nivora-api", idleTimeoutMillis: 30_000 },
         { schema, onPoolError: (error) => logger.error(`Database pool error: ${error.message}`) },
       ),
     });
     this.schema = schema ?? "public";
+    // Diagnostics only (P2-037): PRISMA_LOG_QUERIES=1 logs each SQL statement with its duration.
+    if (process.env.PRISMA_LOG_QUERIES === "1") {
+      (
+        this as unknown as {
+          $on(event: "query", cb: (e: { duration: number; query: string }) => void): void;
+        }
+      ).$on("query", (e) =>
+        logger.log(`query ${e.duration}ms ${e.query.replace(/\s+/g, " ").slice(0, 90)}`),
+      );
+    }
     // Second line of defence behind the test guard: tests never touch real data (barch §18).
     if (config.get("NODE_ENV") === "test" && this.schema !== "nivora_test") {
       throw new Error(
